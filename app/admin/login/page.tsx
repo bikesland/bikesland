@@ -26,14 +26,9 @@ export default function AdminLoginPage() {
       alert("Login successful!");
 
       router.push("/admin/dashboard");
-    } catch (error) {
-  console.error(error);
-
-  alert(
-    error instanceof Error
-      ? error.message
-      : "Login failed"
-  );
+    } catch (error: any) {
+  console.error("LOGIN ERROR:", error);
+  alert("Firebase Error: " + error.code);
 } finally {
   setLoading(false);
 }

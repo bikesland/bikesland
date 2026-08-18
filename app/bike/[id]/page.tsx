@@ -159,9 +159,9 @@ export default function BikeDetailsPage() {
                   Price
                 </p>
 
-                <p className="text-4xl md:text-5xl font-black text-white mt-1">
-                  ₹{bike.price}
-                </p>
+                <p className="text-4xl md:text-5xl font-black text-yellow-400 mt-1">
+  ₹{bike.price}
+</p>
 
               </div>
 

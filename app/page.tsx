@@ -199,7 +199,7 @@ export default function Home() {
                   )}
 
                   {/* PRICE */}
-                  <p className="text-red-500 text-xl font-bold mt-2">
+                  <p className="text-yellow-500 text-xl font-bold mt-2">
                     ₹{bike.price}
                   </p>
 
