@@ -3,37 +3,143 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db } from "./firebase";
 
 export default function Home() {
   const [bikes, setBikes] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-
+const [reviews, setReviews] = useState<any[]>([]);
+const [reviewName, setReviewName] = useState("");
+const [reviewComment, setReviewComment] = useState("");
+const [reviewRating, setReviewRating] = useState(5);
+const [submittingReview, setSubmittingReview] = useState(false);
   useEffect(() => {
-    const fetchBikes = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "bikes"));
+  const fetchBikes = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "bikes"));
 
-        const bikeList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+      const bikeList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-        setBikes(bikeList);
-      } catch (error) {
-        console.error("Error fetching bikes:", error);
-      }
-    };
+      setBikes(bikeList);
+    } catch (error) {
+      console.error("Error fetching bikes:", error);
+    }
+  };
 
-    fetchBikes();
-  }, []);
+  fetchBikes();
 
-  const filteredBikes = bikes.filter((bike) =>
-    (bike.bikeName || "")
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+  const fetchReviews = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "reviews"));
+
+      const reviewList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setReviews(reviewList);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
+  };
+
+  fetchReviews();
+}, []);useEffect(() => {
+  const fetchBikes = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "bikes"));
+
+      const bikeList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setBikes(bikeList);
+    } catch (error) {
+      console.error("Error fetching bikes:", error);
+    }
+  };
+
+  fetchBikes();
+
+  const fetchReviews = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "reviews"));
+
+      const reviewList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setReviews(reviewList);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
+  };
+
+  fetchReviews();
+}, []);
+const submitReview = async () => {
+  if (!reviewName.trim() || !reviewComment.trim()) {
+    alert("Please enter your name and review.");
+    return;
+  }
+
+  setSubmittingReview(true);
+
+  try {
+    await addDoc(collection(db, "reviews"), {
+      name: reviewName.trim(),
+      comment: reviewComment.trim(),
+      rating: reviewRating,
+      createdAt: serverTimestamp(),
+    });
+
+    alert("Thank you! Your review has been submitted.");
+
+    setReviewName("");
+    setReviewComment("");
+    setReviewRating(5);
+
+    const querySnapshot = await getDocs(collection(db, "reviews"));
+
+    const reviewList = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    setReviews(reviewList);
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    alert("Something went wrong. Please try again.");
+  } finally {
+    setSubmittingReview(false);
+  }
+};
+  const averageRating =
+  reviews.length > 0
+    ? (
+        reviews.reduce(
+          (total, review) => total + Number(review.rating || 0),
+          0
+        ) / reviews.length
+      ).toFixed(1)
+    : "0.0";
+
+const filteredBikes = bikes.filter((bike) =>
+  (bike.bikeName || "")
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -261,21 +367,113 @@ export default function Home() {
       </section>
 
       {/* REVIEWS */}
-      <section id="reviews" className="text-center py-16">
+<section id="reviews" className="max-w-3xl mx-auto px-6 py-16">
 
-        <h2 className="text-4xl font-bold text-yellow-400">
-          Customer Reviews
-        </h2>
+  <h2 className="text-4xl font-bold text-yellow-400">
+  Customer Reviews
+</h2>
 
-        <p className="mt-4 text-gray-300">
-          ⭐⭐⭐⭐⭐ 5.0 Rating
-        </p>
+<p className="mt-4 text-gray-300">
+  ⭐⭐⭐⭐⭐ {averageRating} Rating
+</p>
 
-        <p className="mt-2 text-gray-400">
-          Be the first customer to review BikesLand.
-        </p>
+<p className="mt-2 text-gray-400">
+  Based on {reviews.length} customer review{reviews.length !== 1 ? "s" : ""}
+</p>
 
-      </section>
+<p className="mt-4 text-gray-300">
+  Share your experience with BikesLand ⭐
+</p>
+
+  <p className="mt-4 text-gray-300 text-center">
+    Share your experience with BikesLand ⭐
+  </p>
+
+  {/* REVIEW FORM */}
+  <div className="mt-8 bg-gray-900 rounded-2xl p-6">
+
+    <input
+      type="text"
+      placeholder="Your Name"
+      value={reviewName}
+      onChange={(e) => setReviewName(e.target.value)}
+      className="w-full p-3 rounded-lg bg-white text-black outline-none"
+    />
+
+    {/* RATING */}
+    <div className="mt-5">
+      <p className="mb-2">Your Rating</p>
+
+      <select
+        value={reviewRating}
+        onChange={(e) => setReviewRating(Number(e.target.value))}
+        className="w-full p-3 rounded-lg bg-white text-black"
+      >
+        <option value={5}>⭐⭐⭐⭐⭐ 5 Stars</option>
+        <option value={4}>⭐⭐⭐⭐ 4 Stars</option>
+        <option value={3}>⭐⭐⭐ 3 Stars</option>
+        <option value={2}>⭐⭐ 2 Stars</option>
+        <option value={1}>⭐ 1 Star</option>
+      </select>
+    </div>
+
+    {/* COMMENT */}
+    <textarea
+      placeholder="Write your review..."
+      value={reviewComment}
+      onChange={(e) => setReviewComment(e.target.value)}
+      className="w-full mt-5 p-3 rounded-lg bg-white text-black outline-none"
+      rows={4}
+    />
+
+    {/* SUBMIT */}
+    <button
+      onClick={submitReview}
+      disabled={submittingReview}
+      className="w-full mt-5 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 px-5 py-3 rounded-lg font-bold"
+    >
+      {submittingReview ? "Submitting..." : "Submit Review"}
+    </button>
+
+  </div>
+
+  {/* REVIEWS LIST */}
+  <div className="mt-10 space-y-5">
+
+    {reviews.length === 0 ? (
+      <p className="text-center text-gray-500">
+        No reviews yet. Be the first customer to review BikesLand!
+      </p>
+    ) : (
+      reviews.map((review) => (
+        <div
+          key={review.id}
+          className="bg-gray-900 rounded-2xl p-5"
+        >
+
+          <div className="flex justify-between items-center">
+
+            <h3 className="font-bold text-lg">
+              {review.name}
+            </h3>
+
+            <p className="text-yellow-400">
+              {"⭐".repeat(Number(review.rating) || 0)}
+            </p>
+
+          </div>
+
+          <p className="mt-3 text-gray-300">
+            {review.comment}
+          </p>
+
+        </div>
+      ))
+    )}
+
+  </div>
+
+</section>
 
       {/* CONTACT */}
       <section id="contact" className="text-center py-16">

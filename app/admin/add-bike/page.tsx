@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { db } from "../../firebase";
+import { db, storage } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function AddBikePage() {
   const [bikeName, setBikeName] = useState("");
@@ -10,42 +11,56 @@ export default function AddBikePage() {
   const [location, setLocation] = useState("");
   const [year, setYear] = useState("");
   const [kmDriven, setKmDriven] = useState("");
-  const [image, setImage] = useState("");
   const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     if (!bikeName || !price || !location || !year || !kmDriven) {
-      alert("⚠️ Please fill all required fields");
+      alert("Please fill all required fields");
       return;
     }
 
     try {
       setSaving(true);
 
+      let imageURL = "";
+
+      if (imageFile) {
+        const imageRef = ref(
+          storage,
+          "bikes/" + Date.now() + "-" + imageFile.name
+        );
+
+        await uploadBytes(imageRef, imageFile);
+
+        imageURL = await getDownloadURL(imageRef);
+      }
+
       await addDoc(collection(db, "bikes"), {
-        bikeName,
-        price,
-        location,
-        year,
-        kmDriven,
-        image,
-        description,
+        bikeName: bikeName,
+        price: price,
+        location: location,
+        year: year,
+        kmDriven: kmDriven,
+        image: imageURL,
+        description: description,
         createdAt: new Date(),
       });
 
-      alert("✅ Bike Added Successfully!");
+      alert("Bike Added Successfully!");
 
       setBikeName("");
       setPrice("");
       setLocation("");
       setYear("");
       setKmDriven("");
-      setImage("");
       setDescription("");
+      setImageFile(null);
+
     } catch (error) {
       console.error(error);
-      alert("❌ Error adding bike");
+      alert("Error adding bike");
     } finally {
       setSaving(false);
     }
@@ -53,16 +68,14 @@ export default function AddBikePage() {
 
   return (
     <main className="min-h-screen bg-black text-white p-6">
-
-      <div className="max-w-xl mx-auto bg-gray-900 p-6 rounded-xl shadow-lg">
+      <div className="max-w-xl mx-auto bg-gray-900 p-6 rounded-xl">
 
         <h1 className="text-3xl font-bold text-center mb-6">
-          ➕ Add Bike
+          Add Bike
         </h1>
 
         <div className="space-y-4">
 
-          {/* Bike Name */}
           <input
             type="text"
             placeholder="Bike Name"
@@ -71,7 +84,6 @@ export default function AddBikePage() {
             className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          {/* Price */}
           <input
             type="text"
             placeholder="Price"
@@ -80,7 +92,6 @@ export default function AddBikePage() {
             className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          {/* Location */}
           <input
             type="text"
             placeholder="Location"
@@ -89,7 +100,6 @@ export default function AddBikePage() {
             className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          {/* Year */}
           <input
             type="number"
             placeholder="Year"
@@ -98,7 +108,6 @@ export default function AddBikePage() {
             className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          {/* KM Driven */}
           <input
             type="number"
             placeholder="KM Driven"
@@ -107,16 +116,22 @@ export default function AddBikePage() {
             className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          {/* Image Path */}
-          <input
-            type="text"
-            placeholder="Image Path (example: /bikes/activa.jpg)"
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            className="w-full p-3 rounded bg-gray-800 border border-gray-700"
-          />
+          <div>
+            <label className="block mb-2 font-semibold">
+              Bike Photo
+            </label>
 
-          {/* Description */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setImageFile(file);
+              }}
+              className="w-full p-3 rounded bg-gray-800 border border-gray-700"
+            />
+          </div>
+
           <textarea
             placeholder="Description"
             value={description}
@@ -125,18 +140,16 @@ export default function AddBikePage() {
             className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          {/* Save Button */}
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 p-3 rounded-lg font-bold"
+            className="w-full bg-red-600 hover:bg-red-700 p-3 rounded-lg font-bold"
           >
-            {saving ? "Saving..." : "Save Bike"}
+            {saving ? "Uploading..." : "Save Bike"}
           </button>
 
         </div>
       </div>
-
     </main>
   );
 }
