@@ -264,65 +264,7 @@ const handleDeleteReview = async (id: string) => {
             </div>
           )}
 
-        </div>
-{/* Customer Reviews */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mt-10">
-
-          <h2 className="text-2xl font-bold mb-6">
-            ⭐ Customer Reviews
-          </h2>
-
-          {reviews.length === 0 ? (
-
-            <p className="text-gray-400">
-              No customer reviews found.
-            </p>
-
-          ) : (
-
-            <div className="space-y-4">
-
-              {reviews.map((review) => (
-
-                <div
-                  key={review.id}
-                  className="bg-black border border-zinc-800 rounded-xl p-5"
-                >
-
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
-                    <div>
-
-                      <h3 className="text-xl font-bold">
-                        {review.name || "Customer"}
-                      </h3>
-
-                      <p className="text-yellow-400 mt-1">
-                        {"★".repeat(Number(review.rating) || 0)}
-                      </p>
-
-                      <p className="text-gray-300 mt-3">
-                        {review.comment}
-                      </p>
-
-                    </div>
-
-                    <button
-                      onClick={() => handleDeleteReview(review.id)}
-                      className="bg-red-600 hover:bg-red-700 px-5 py-3 rounded-lg font-bold"
-                    >
-                      🗑️ Delete Review
-                    </button>
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
+      
 
         </div>{/* Customer Reviews */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mt-10">
