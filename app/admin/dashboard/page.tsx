@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [bikes, setBikes] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
@@ -44,16 +45,52 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "reviews"));
+
+      const reviewList = snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data(),
+      }));
+
+      setReviews(reviewList);
+    } catch (error) {
+      console.error(error);
+      alert("❌ Error loading reviews");
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         fetchBikes();
+        fetchReviews();
       }
     });
 
     return () => unsubscribe();
   }, []);
+const handleDeleteReview = async (id: string) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this customer review?"
+  );
 
+  if (!confirmDelete) return;
+
+  try {
+    await deleteDoc(doc(db, "reviews", id));
+
+    setReviews((previousReviews) =>
+      previousReviews.filter((review) => review.id !== id)
+    );
+
+    alert("✅ Customer review deleted successfully!");
+  } catch (error) {
+    console.error(error);
+    alert("❌ Error deleting customer review");
+  }
+};
   const handleDelete = async (id: string, bikeName: string) => {
     const confirmDelete = window.confirm(
       `Are you sure you want to delete ${bikeName}?`
@@ -228,7 +265,125 @@ export default function DashboardPage() {
           )}
 
         </div>
+{/* Customer Reviews */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mt-10">
 
+          <h2 className="text-2xl font-bold mb-6">
+            ⭐ Customer Reviews
+          </h2>
+
+          {reviews.length === 0 ? (
+
+            <p className="text-gray-400">
+              No customer reviews found.
+            </p>
+
+          ) : (
+
+            <div className="space-y-4">
+
+              {reviews.map((review) => (
+
+                <div
+                  key={review.id}
+                  className="bg-black border border-zinc-800 rounded-xl p-5"
+                >
+
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+                    <div>
+
+                      <h3 className="text-xl font-bold">
+                        {review.name || "Customer"}
+                      </h3>
+
+                      <p className="text-yellow-400 mt-1">
+                        {"★".repeat(Number(review.rating) || 0)}
+                      </p>
+
+                      <p className="text-gray-300 mt-3">
+                        {review.comment}
+                      </p>
+
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteReview(review.id)}
+                      className="bg-red-600 hover:bg-red-700 px-5 py-3 rounded-lg font-bold"
+                    >
+                      🗑️ Delete Review
+                    </button>
+
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
+
+          )}
+
+        </div>{/* Customer Reviews */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mt-10">
+
+          <h2 className="text-2xl font-bold mb-6">
+            ⭐ Customer Reviews
+          </h2>
+
+          {reviews.length === 0 ? (
+
+            <p className="text-gray-400">
+              No customer reviews found.
+            </p>
+
+          ) : (
+
+            <div className="space-y-4">
+
+              {reviews.map((review) => (
+
+                <div
+                  key={review.id}
+                  className="bg-black border border-zinc-800 rounded-xl p-5"
+                >
+
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+                    <div>
+
+                      <h3 className="text-xl font-bold">
+                        {review.name || "Customer"}
+                      </h3>
+
+                      <p className="text-yellow-400 mt-1">
+                        {"★".repeat(Number(review.rating) || 0)}
+                      </p>
+
+                      <p className="text-gray-300 mt-3">
+                        {review.comment}
+                      </p>
+
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteReview(review.id)}
+                      className="bg-red-600 hover:bg-red-700 px-5 py-3 rounded-lg font-bold"
+                    >
+                      🗑️ Delete Review
+                    </button>
+
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
+
+          )}
+
+        </div>
       </div>
     </main>
   );
