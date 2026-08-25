@@ -1,52 +1,125 @@
-export default function About() {
+export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-black text-white p-8">
+    <main className="min-h-screen bg-black text-white px-6 py-12">
+      <div className="max-w-5xl mx-auto">
 
-      <h1 className="text-4xl font-bold text-center">
-        About BikesLand
-      </h1>
+        <h1 className="text-5xl font-bold text-red-500 text-center">
+          About BikesLand
+        </h1>
 
-      <p className="mt-6 text-lg text-center max-w-3xl mx-auto">
-        Welcome to <span className="font-bold text-green-400">BikesLand</span>.
-        We are a trusted second-hand bike dealer in Nellore.
-        Our goal is to provide quality used bikes with genuine documents,
-        fair prices, and excellent customer service.
-      </p>
+        <p className="text-center text-gray-400 mt-4 text-lg">
+          Trusted Second-Hand Bike Marketplace
+        </p>
 
-      <div className="mt-10 grid md:grid-cols-3 gap-6">
+        <div className="mt-12 bg-gray-900 rounded-2xl p-8">
+          <h2 className="text-3xl font-bold text-yellow-400">
+            Our Mission
+          </h2>
 
-        <div className="border border-gray-700 rounded-xl p-5">
-          <h2 className="text-xl font-bold">🏍️ Quality Bikes</h2>
-          <p className="mt-3">
-            Every bike is carefully checked before sale.
+          <p className="mt-4 text-gray-300 leading-8">
+            BikesLand is committed to providing trusted, quality second-hand
+            bikes at fair prices. We help customers buy and sell bikes safely,
+            easily, and with confidence.
           </p>
         </div>
 
-        <div className="border border-gray-700 rounded-xl p-5">
-          <h2 className="text-xl font-bold">📄 Genuine Documents</h2>
-          <p className="mt-3">
-            RC, insurance and documents are verified.
-          </p>
+        <div className="mt-8 bg-gray-900 rounded-2xl p-8">
+          <h2 className="text-3xl font-bold text-yellow-400">
+            Why Choose BikesLand?
+          </h2>
+
+          <ul className="mt-4 space-y-3 text-gray-300">
+            <li>✅ Quality Verified Bikes</li>
+            <li>✅ Best Prices</li>
+            <li>✅ Trusted Service</li>
+            <li>✅ Easy Call & WhatsApp Support</li>
+            <li>✅ Customer Satisfaction</li>
+          </ul>
         </div>
 
-        <div className="border border-gray-700 rounded-xl p-5">
-          <h2 className="text-xl font-bold">🤝 Trusted Service</h2>
-          <p className="mt-3">
-            Customer satisfaction is our first priority.
+        <div className="mt-8 bg-gray-900 rounded-2xl p-8 text-center">
+          <h2 className="text-3xl font-bold text-red-500">
+            Founder
+          </h2>
+
+          <img
+            src="/founder.jpg"
+            alt="Founder"
+            className="w-32 h-32 rounded-full mx-auto mt-6 border-4 border-yellow-500 object-cover"
+          />
+
+          <h3 className="text-2xl font-bold mt-5">
+            Kandhukuru Bhupathi Santosh
+          </h3>
+
+          <p className="text-gray-400">
+            Founder & CEO, BikesLand
           </p>
         </div>
 
       </div>
+    </main>
+  );
 
-      <div className="mt-10 text-center">
-        <a
-          href="/"
-          className="bg-blue-600 px-6 py-3 rounded-lg"
-        >
-          ⬅ Back to Home
-        </a>
+  return (
+    <main className="min-h-screen bg-black text-white px-6 py-12">
+      <div className="max-w-5xl mx-auto">
+
+        <h1 className="text-5xl font-bold text-red-500 text-center">
+          About BikesLand
+        </h1>
+
+        <p className="text-center text-gray-400 mt-4 text-lg">
+          Trusted Second-Hand Bike Marketplace
+        </p>
+
+        <div className="mt-12 bg-gray-900 rounded-2xl p-8">
+          <h2 className="text-3xl font-bold text-yellow-400">
+            Our Mission
+          </h2>
+
+          <p className="mt-4 text-gray-300 leading-8">
+            BikesLand is committed to providing trusted, quality second-hand
+            bikes at fair prices. We help customers buy and sell bikes safely,
+            easily, and with confidence.
+          </p>
+        </div>
+
+        <div className="mt-8 bg-gray-900 rounded-2xl p-8">
+          <h2 className="text-3xl font-bold text-yellow-400">
+            Why Choose BikesLand?
+          </h2>
+
+          <ul className="mt-4 space-y-3 text-gray-300">
+            <li>✅ Quality Verified Bikes</li>
+            <li>✅ Best Prices</li>
+            <li>✅ Trusted Service</li>
+            <li>✅ Easy Call & WhatsApp Support</li>
+            <li>✅ Customer Satisfaction</li>
+          </ul>
+        </div>
+
+        <div className="mt-8 bg-gray-900 rounded-2xl p-8 text-center">
+          <h2 className="text-3xl font-bold text-red-500">
+            Founder
+          </h2>
+
+          <img
+            src="/founder.jpg"
+            alt="Founder"
+            className="w-32 h-32 rounded-full mx-auto mt-6 border-4 border-yellow-500 object-cover"
+          />
+
+          <h3 className="text-2xl font-bold mt-5">
+            Kandhukuru Bhupathi Santosh
+          </h3>
+
+          <p className="text-gray-400">
+            Founder & CEO, BikesLand
+          </p>
+        </div>
+
       </div>
-
     </main>
   );
 }
