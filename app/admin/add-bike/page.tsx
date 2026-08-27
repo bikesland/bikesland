@@ -1,13 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { db, storage } from "../../firebase";
+import { db } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
 
 export default function AddBikePage() {
   const [bikeName, setBikeName] = useState("");
@@ -17,11 +12,56 @@ export default function AddBikePage() {
   const [kmDriven, setKmDriven] = useState("");
   const [description, setDescription] = useState("");
 
-  // MULTIPLE PHOTOS
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-
   const [saving, setSaving] = useState(false);
 
+  // =========================
+  // CLOUDINARY UPLOAD
+  // =========================
+  const uploadToCloudinary = async (file: File) => {
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    formData.append(
+  "upload_preset",
+  "bikesland_upload"
+);
+
+    const response = await fetch(
+      "https://api.cloudinary.com/v1_1/vflu9vv4/image/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const responseText = await response.text();
+
+    console.log(
+      "Cloudinary Status:",
+      response.status
+    );
+
+    console.log(
+      "Cloudinary Response:",
+      responseText
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Cloudinary ${response.status}: ${responseText}`
+      );
+    }
+
+    const data = JSON.parse(responseText);
+
+    return data.secure_url as string;
+  };
+
+  // =========================
+  // SAVE BIKE
+  // =========================
   const handleSave = async () => {
     if (
       !bikeName ||
@@ -49,22 +89,17 @@ export default function AddBikePage() {
 
       const imageURLs: string[] = [];
 
-      // UPLOAD ALL PHOTOS
+      // Upload every selected image
       for (const file of imageFiles) {
-        const imageRef = ref(
-          storage,
-          `bikes/${Date.now()}-${file.name}`
-        );
+        const imageURL =
+          await uploadToCloudinary(file);
 
-        await uploadBytes(imageRef, file);
-
-        const downloadURL =
-          await getDownloadURL(imageRef);
-
-        imageURLs.push(downloadURL);
+        imageURLs.push(imageURL);
       }
 
-      // FIRESTORE
+      // =========================
+      // SAVE BIKE TO FIRESTORE
+      // =========================
       await addDoc(collection(db, "bikes"), {
         bikeName: bikeName,
         name: bikeName,
@@ -74,10 +109,7 @@ export default function AddBikePage() {
         year: year,
         kmDriven: kmDriven,
 
-        // OLD SINGLE IMAGE SUPPORT
         image: imageURLs[0],
-
-        // NEW MULTIPLE IMAGES
         images: imageURLs,
 
         description: description,
@@ -98,7 +130,6 @@ export default function AddBikePage() {
       setDescription("");
       setImageFiles([]);
 
-      // Reset file input
       const fileInput =
         document.getElementById(
           "bikePhotos"
@@ -109,8 +140,17 @@ export default function AddBikePage() {
       }
 
     } catch (error) {
-      console.error(error);
-      alert("Error adding bike");
+      console.error(
+        "Error adding bike:",
+        error
+      );
+
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Unknown error occurred");
+      }
+
     } finally {
       setSaving(false);
     }
@@ -118,6 +158,7 @@ export default function AddBikePage() {
 
   return (
     <main className="min-h-screen bg-black text-white p-6">
+
       <div className="max-w-xl mx-auto bg-gray-900 p-6 rounded-xl">
 
         <h1 className="text-3xl font-bold text-center mb-6">
@@ -181,8 +222,9 @@ export default function AddBikePage() {
             className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          {/* MULTIPLE PHOTOS */}
+          {/* PHOTOS */}
           <div>
+
             <label className="block mb-2 font-semibold">
               Bike Photos (Maximum 6)
             </label>
@@ -193,48 +235,56 @@ export default function AddBikePage() {
               accept="image/*"
               multiple
               onChange={(e) => {
+
                 const files = Array.from(
                   e.target.files || []
                 );
 
                 if (files.length > 6) {
+
                   alert(
                     "Please select maximum 6 photos"
                   );
 
                   e.target.value = "";
                   setImageFiles([]);
+
                   return;
                 }
 
                 setImageFiles(files);
+
               }}
               className="w-full p-3 rounded bg-gray-800 border border-gray-700"
             />
 
-            {/* SELECTED PHOTO COUNT */}
             {imageFiles.length > 0 && (
               <p className="text-green-400 mt-2 text-sm">
                 ✅ {imageFiles.length} photo
-                {imageFiles.length > 1 ? "s" : ""} selected
+                {imageFiles.length > 1
+                  ? "s"
+                  : ""}{" "}
+                selected
               </p>
             )}
+
           </div>
 
           {/* PHOTO PREVIEW */}
           {imageFiles.length > 0 && (
+
             <div className="grid grid-cols-3 gap-3">
 
               {imageFiles.map(
                 (file, index) => (
+
                   <div
                     key={`${file.name}-${index}`}
                     className="relative"
                   >
+
                     <img
-                      src={URL.createObjectURL(
-                        file
-                      )}
+                      src={URL.createObjectURL(file)}
                       alt={`Bike ${index + 1}`}
                       className="w-full h-24 object-cover rounded-lg border border-gray-700"
                     />
@@ -242,11 +292,14 @@ export default function AddBikePage() {
                     <span className="absolute bottom-1 left-1 bg-black/70 px-2 py-1 rounded text-xs">
                       {index + 1}
                     </span>
+
                   </div>
+
                 )
               )}
 
             </div>
+
           )}
 
           {/* DESCRIPTION */}
@@ -273,6 +326,7 @@ export default function AddBikePage() {
 
         </div>
       </div>
+
     </main>
   );
 }

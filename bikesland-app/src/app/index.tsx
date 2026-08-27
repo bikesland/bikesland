@@ -65,18 +65,16 @@ export default function HomeScreen() {
 
       const snapshot = await getDocs(reviewsQuery);
 
-      const firebaseReviews: Review[] = snapshot.docs.map(
-        (doc) => {
-          const data = doc.data();
+      const firebaseReviews: Review[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
 
-          return {
-            id: doc.id,
-            name: String(data.name || "Customer"),
-            review: String(data.review || ""),
-            rating: Number(data.rating || 5),
-          };
-        }
-      );
+        return {
+          id: doc.id,
+          name: String(data.name || "Customer"),
+          review: String(data.review || ""),
+          rating: Number(data.rating || 5),
+        };
+      });
 
       setReviews(firebaseReviews);
     } catch (error) {
@@ -90,71 +88,64 @@ export default function HomeScreen() {
         setLoading(true);
         setFirebaseError("");
 
-        const snapshot = await getDocs(
-          collection(db, "bikes")
-        );
+        const snapshot = await getDocs(collection(db, "bikes"));
 
-        const firebaseBikes: Bike[] = snapshot.docs.map(
-          (doc) => {
-            const data = doc.data();
+        const firebaseBikes: Bike[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
 
-            let images: string[] = [];
+          let images: string[] = [];
 
-            if (Array.isArray(data.images)) {
-              images = data.images
-                .filter((img: unknown) => img)
-                .map((img: unknown) => {
-                  const image = String(img);
+          if (Array.isArray(data.images)) {
+            images = data.images
+              .filter((img: unknown) => img)
+              .map((img: unknown) => {
+                const image = String(img);
 
-                  return image.startsWith("http")
-                    ? image
-                    : `https://bikesland.in${image}`;
-                });
-            }
-
-            const singleImage = data.image
-              ? String(data.image).startsWith("http")
-                ? String(data.image)
-                : `https://bikesland.in${data.image}`
-              : "";
-
-            if (images.length === 0 && singleImage) {
-              images = [singleImage];
-            }
-
-            return {
-              id: doc.id,
-              name: String(
-                data.name ||
-                  data.bikeName ||
-                  data.bikename ||
-                  "Bike"
-              ),
-              imageUrl: singleImage,
-              images,
-              year: String(data.year || ""),
-              location: String(data.location || ""),
-              km: String(
-                data.km ||
-                  data.kmDriven ||
-                  data.kilometers ||
-                  ""
-              ),
-              price: String(data.price || ""),
-              description: String(
-                data.description || ""
-              ),
-            };
+                return image.startsWith("http")
+                  ? image
+                  : `https://bikesland.in${image}`;
+              });
           }
-        );
+
+          const singleImage = data.image
+            ? String(data.image).startsWith("http")
+              ? String(data.image)
+              : `https://bikesland.in${data.image}`
+            : "";
+
+          if (images.length === 0 && singleImage) {
+            images = [singleImage];
+          }
+
+          return {
+            id: doc.id,
+            name: String(
+              data.name ||
+                data.bikeName ||
+                data.bikename ||
+                "Bike"
+            ),
+            imageUrl: singleImage,
+            images,
+            year: String(data.year || ""),
+            location: String(data.location || ""),
+            km: String(
+              data.km ||
+                data.kmDriven ||
+                data.kilometers ||
+                ""
+            ),
+            price: String(data.price || ""),
+            description: String(data.description || ""),
+          };
+        });
 
         setBikes(firebaseBikes);
       } catch (error: any) {
         console.log("Firebase Error:", error);
 
         setFirebaseError(
-          error?.message ||
-            "Unable to load bikes"
+          error?.message || "Unable to load bikes"
         );
       } finally {
         setLoading(false);
@@ -186,6 +177,11 @@ export default function HomeScreen() {
       return;
     }
 
+    if (reviewRating === 0) {
+      alert("Please select your rating");
+      return;
+    }
+
     if (!reviewText.trim()) {
       alert("Please write your review");
       return;
@@ -203,18 +199,13 @@ export default function HomeScreen() {
 
       setReviewName("");
       setReviewText("");
-      setReviewRating(5);
+      setReviewRating(0);
 
       await loadReviews();
 
-      alert(
-        "Thank you! Your review has been submitted."
-      );
+      alert("Thank you! Your review has been submitted.");
     } catch (error) {
-      console.log(
-        "Submit Review Error:",
-        error
-      );
+      console.log("Submit Review Error:", error);
 
       alert(
         "Unable to submit review. Please try again."
@@ -231,13 +222,9 @@ export default function HomeScreen() {
   );
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View style={styles.container}>
 
-      {/* HEADER */}
+      {/* FIXED HEADER */}
 
       <View style={styles.header}>
 
@@ -255,473 +242,504 @@ export default function HomeScreen() {
 
       </View>
 
+      {/* SCROLLABLE CONTENT */}
 
-      {/* HERO */}
+      <ScrollView
+        style={styles.contentScroll}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
 
-      <View style={styles.hero}>
+        {/* HERO */}
 
-        <Text style={styles.heroTitle}>
-          Find Your Perfect Bike
-        </Text>
+        <View style={styles.hero}>
 
-        <Text style={styles.heroSubtitle}>
-          Buy & Sell Trusted Second-Hand Bikes
-          {"\n"}
-          with BikesLand
-        </Text>
-
-        <View style={styles.searchBox}>
-
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search your bike..."
-            placeholderTextColor="#888"
-            style={styles.input}
-          />
-
-          <TouchableOpacity
-            style={styles.searchButton}
-          >
-            <Text style={styles.searchText}>
-              Search
-            </Text>
-          </TouchableOpacity>
-
-        </View>
-
-      </View>
-
-
-      {/* FOUNDER */}
-
-      <View style={styles.founderSection}>
-
-        <View style={styles.founderCircle}>
-
-          <Image
-            source={require(
-              "../../assets/images/founder.jpg"
-            )}
-            style={styles.founderImage}
-            resizeMode="cover"
-          />
-
-        </View>
-
-        <View style={styles.founderInfo}>
-
-          <Text style={styles.founderLabel}>
-            FOUNDER & CEO
+          <Text style={styles.heroTitle}>
+            Find Your Perfect Bike
           </Text>
 
-          <Text style={styles.founderName}>
-            Kandhukuru Bhupathi Santosh
+          <Text style={styles.heroSubtitle}>
+            Buy & Sell Trusted Second-Hand Bikes
+            {"\n"}
+            with BikesLand
           </Text>
 
-          <Text style={styles.founderTrust}>
-            ✓ Building Trust in Every Ride
-          </Text>
+          <View style={styles.searchBox}>
 
-        </View>
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Search your bike..."
+              placeholderTextColor="#888"
+              style={styles.input}
+            />
 
-      </View>
-
-
-      {/* AVAILABLE BIKES */}
-
-      <Text style={styles.sectionTitle}>
-        Available Bikes
-      </Text>
-
-      <View style={styles.bikesContainer}>
-
-        {loading ? (
-
-          <Text style={styles.message}>
-            Loading bikes...
-          </Text>
-
-        ) : firebaseError ? (
-
-          <Text style={styles.error}>
-            Firebase Error: {firebaseError}
-          </Text>
-
-        ) : filteredBikes.length === 0 ? (
-
-          <Text style={styles.message}>
-            {search
-              ? "No bikes found"
-              : "No bikes available"}
-          </Text>
-
-        ) : (
-
-          filteredBikes.map((bike) => (
-
-            <View
-              key={bike.id}
-              style={styles.card}
+            <TouchableOpacity
+              style={styles.searchButton}
             >
+              <Text style={styles.searchText}>
+                Search
+              </Text>
+            </TouchableOpacity>
 
-              {/* BIKE PHOTOS */}
+          </View>
 
-              {bike.images &&
-              bike.images.length > 0 ? (
+        </View>
 
-                <ScrollView
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  nestedScrollEnabled
-                >
+        {/* FOUNDER */}
 
-                  {bike.images.map(
-                    (image, index) => (
+        <View style={styles.founderSection}>
 
-                      <View
-                        key={`${bike.id}-${index}`}
-                        style={styles.photoContainer}
-                      >
+          <View style={styles.founderCircle}>
 
-                        <Image
-                          source={{ uri: image }}
-                          style={styles.bikeImage}
-                          resizeMode="cover"
-                        />
+            <Image
+              source={require(
+                "../../assets/images/founder.jpg"
+              )}
+              style={styles.founderImage}
+              resizeMode="cover"
+            />
+
+          </View>
+
+          <View style={styles.founderInfo}>
+
+            <Text style={styles.founderLabel}>
+  FOUNDER & CEO | BIKESLAND
+</Text>
+
+            <Text style={styles.founderName}>
+              Kandhukuru Bhupathi Santosh
+            </Text>
+
+            <Text style={styles.founderTrust}>
+              ✓ Building Trust in Every Ride
+            </Text>
+
+          </View>
+
+        </View>
+
+        {/* AVAILABLE BIKES */}
+
+        <Text style={styles.sectionTitle}>
+          Available Bikes
+        </Text>
+
+        <View style={styles.bikesContainer}>
+
+          {loading ? (
+
+            <Text style={styles.message}>
+              Loading bikes...
+            </Text>
+
+          ) : firebaseError ? (
+
+            <Text style={styles.error}>
+              Firebase Error: {firebaseError}
+            </Text>
+
+          ) : filteredBikes.length === 0 ? (
+
+            <Text style={styles.message}>
+              {search
+                ? "No bikes found"
+                : "No bikes available"}
+            </Text>
+
+          ) : (
+
+            filteredBikes.map((bike) => (
+
+              <View
+                key={bike.id}
+                style={styles.card}
+              >
+
+                {bike.images &&
+                bike.images.length > 0 ? (
+
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    nestedScrollEnabled
+                  >
+
+                    {bike.images.map(
+                      (image, index) => (
 
                         <View
-                          style={styles.counter}
+                          key={`${bike.id}-${index}`}
+                          style={styles.photoContainer}
                         >
-                          <Text
-                            style={styles.counterText}
-                          >
-                            {index + 1} /{" "}
-                            {bike.images?.length || 1}
-                          </Text>
+
+                          <Image
+                            source={{ uri: image }}
+                            style={styles.bikeImage}
+                            resizeMode="cover"
+                          />
+
+                          <View style={styles.counter}>
+
+                            <Text
+                              style={styles.counterText}
+                            >
+                              {index + 1} /{" "}
+                              {bike.images?.length || 1}
+                            </Text>
+
+                          </View>
+
                         </View>
 
-                      </View>
+                      )
+                    )}
 
-                    )
-                  )}
+                  </ScrollView>
 
-                </ScrollView>
+                ) : (
 
-              ) : (
+                  <View style={styles.noImage}>
 
-                <View style={styles.noImage}>
-                  <Text style={styles.noImageText}>
-                    Bike Image
+                    <Text style={styles.noImageText}>
+                      Bike Image
+                    </Text>
+
+                  </View>
+
+                )}
+
+                <View style={styles.cardContent}>
+
+                  <Text style={styles.bikeName}>
+                    {bike.name}
                   </Text>
-                </View>
 
-              )}
+                  <Text style={styles.info}>
+                    📅 Year: {bike.year}
+                  </Text>
 
+                  <Text style={styles.info}>
+                    📍 {bike.location}
+                  </Text>
 
-              {/* BIKE INFO */}
+                  <Text style={styles.info}>
+                    🛣 KM Driven: {bike.km}
+                  </Text>
 
-              <View style={styles.cardContent}>
+                  <Text style={styles.price}>
+                    {bike.price}
+                  </Text>
 
-                <Text style={styles.bikeName}>
-                  {bike.name}
-                </Text>
+                  <View style={styles.buttons}>
 
-                <Text style={styles.info}>
-                  📅 Year: {bike.year}
-                </Text>
+                    <TouchableOpacity
+                      style={styles.viewButton}
+                      onPress={() =>
+                        router.push({
+                          pathname:
+                            "/view-details/[id]",
+                          params: {
+                            id: bike.id,
+                          },
+                        })
+                      }
+                    >
+                      <Text style={styles.buttonText}>
+                        View Details
+                      </Text>
+                    </TouchableOpacity>
 
-                <Text style={styles.info}>
-                  📍 {bike.location}
-                </Text>
+                    <TouchableOpacity
+                      style={styles.callButton}
+                      onPress={callNow}
+                    >
+                      <Text style={styles.buttonText}>
+                        Call
+                      </Text>
+                    </TouchableOpacity>
 
-                <Text style={styles.info}>
-                  🛣 KM Driven: {bike.km}
-                </Text>
+                    <TouchableOpacity
+                      style={styles.whatsappButton}
+                      onPress={() =>
+                        whatsapp(bike.name)
+                      }
+                    >
+                      <Text style={styles.buttonText}>
+                        WhatsApp
+                      </Text>
+                    </TouchableOpacity>
 
-                <Text style={styles.price}>
-                  {bike.price}
-                </Text>
-
-                <View style={styles.buttons}>
-
-                  <TouchableOpacity
-                    style={styles.viewButton}
-                    onPress={() =>
-                      router.push({
-                        pathname:
-                          "/view-details/[id]",
-                        params: {
-                          id: bike.id,
-                        },
-                      })
-                    }
-                  >
-                    <Text style={styles.buttonText}>
-                      View Details
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.callButton}
-                    onPress={callNow}
-                  >
-                    <Text style={styles.buttonText}>
-                      Call
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.whatsappButton}
-                    onPress={() =>
-                      whatsapp(bike.name)
-                    }
-                  >
-                    <Text style={styles.buttonText}>
-                      WhatsApp
-                    </Text>
-                  </TouchableOpacity>
+                  </View>
 
                 </View>
 
               </View>
 
-            </View>
+            ))
 
-          ))
-
-        )}
-
-      </View>
-
-
-      {/* ABOUT BIKESLAND */}
-
-      <View style={styles.aboutSection}>
-
-        <Text style={styles.bottomTitle}>
-          About BikesLand
-        </Text>
-
-        <Text style={styles.bottomText}>
-          BikesLand is a trusted platform for
-          buying and selling quality second-hand
-          bikes. Our goal is to make every bike
-          purchase simple, transparent and
-          trustworthy.
-        </Text>
-
-        <Text style={styles.promise}>
-          🏍️ Quality Bikes  •  🤝 Trusted Service
-        </Text>
-
-      </View>
-
-
-      {/* CUSTOMER REVIEWS */}
-
-      <View style={styles.reviewsSection}>
-
-        <Text style={styles.bottomTitle}>
-          Customer Reviews
-        </Text>
-
-
-        {/* REVIEW FORM */}
-
-        <View style={styles.reviewForm}>
-
-          <Text style={styles.formLabel}>
-            Your Name
-          </Text>
-
-          <TextInput
-            value={reviewName}
-            onChangeText={setReviewName}
-            placeholder="Enter your name"
-            placeholderTextColor="#777"
-            style={styles.reviewInput}
-          />
-
-
-          <Text style={styles.formLabel}>
-            Your Rating
-          </Text>
-
-          <View style={styles.ratingRow}>
-  {[1, 2, 3, 4, 5].map((star) => (
-    <TouchableOpacity
-      key={star}
-      onPress={() => setReviewRating(star)}
-    >
-      <Text
-        style={[
-          styles.ratingStar,
-          {
-            color:
-              star <= reviewRating
-                ? "#ffd400"
-                : "#555",
-          },
-        ]}
-      >
-        ★
-      </Text>
-    </TouchableOpacity>
-  ))}
-</View>
-
-
-          <Text style={styles.formLabel}>
-            Your Review
-          </Text>
-
-          <TextInput
-            value={reviewText}
-            onChangeText={setReviewText}
-            placeholder="Write your review..."
-            placeholderTextColor="#777"
-            multiline
-            numberOfLines={4}
-            style={styles.reviewTextInput}
-          />
-
-
-          <TouchableOpacity
-            style={styles.submitReviewButton}
-            onPress={submitReview}
-            disabled={reviewLoading}
-          >
-
-            <Text style={styles.submitReviewText}>
-              {reviewLoading
-                ? "Submitting..."
-                : "Submit Review"}
-            </Text>
-
-          </TouchableOpacity>
+          )}
 
         </View>
 
+        {/* ABOUT BIKESLAND */}
 
-        {/* FIREBASE REVIEWS */}
+        <View style={styles.aboutSection}>
 
-        {reviews.length === 0 ? (
-
-          <Text style={styles.noReviews}>
-            No reviews yet. Be the first to
-            review BikesLand!
+          <Text style={styles.bottomTitle}>
+            About BikesLand
           </Text>
 
-        ) : (
+          <Text style={styles.bottomText}>
+            BikesLand is a trusted platform for
+            buying and selling quality second-hand
+            bikes. Our goal is to make every bike
+            purchase simple, transparent and
+            trustworthy.
+          </Text>
 
-          reviews.map((item) => (
+          <Text style={styles.promise}>
+            🏍️ Quality Bikes  •  🤝 Trusted Service
+          </Text>
 
-            <View
-              key={item.id}
-              style={styles.reviewCard}
-            >
+        </View>
 
-              <Text style={styles.stars}>
-                {"★".repeat(
-                  Math.min(
-                    5,
-                    Math.max(
-                      0,
-                      Number(item.rating || 5)
-                    )
-                  )
-                )}
+        {/* CUSTOMER REVIEWS */}
 
-                {"☆".repeat(
-                  5 -
-                    Math.min(
-                      5,
-                      Math.max(
-                        0,
-                        Number(item.rating || 5)
-                      )
-                    )
-                )}
-              </Text>
+        <View style={styles.reviewsSection}>
 
-              <Text style={styles.reviewText}>
-                "{item.review}"
-              </Text>
+          <Text style={styles.bottomTitle}>
+            Customer Reviews
+          </Text>
 
-              <Text style={styles.reviewer}>
-                — {item.name}
-              </Text>
+          {/* REVIEW FORM */}
+
+          <View style={styles.reviewForm}>
+
+            <Text style={styles.formLabel}>
+              Your Name
+            </Text>
+
+            <TextInput
+              value={reviewName}
+              onChangeText={setReviewName}
+              placeholder="Enter your name"
+              placeholderTextColor="#777"
+              style={styles.reviewInput}
+            />
+
+            <Text style={styles.formLabel}>
+              Your Rating
+            </Text>
+
+            <View style={styles.ratingRow}>
+
+              {[1, 2, 3, 4, 5].map((star) => (
+
+                <TouchableOpacity
+                  key={star}
+                  onPress={() =>
+                    setReviewRating(star)
+                  }
+                >
+
+                  <Text
+                    style={[
+                      styles.ratingStar,
+                      {
+                        color:
+                          star <= reviewRating
+                            ? "#ffd400"
+                            : "#555",
+                      },
+                    ]}
+                  >
+                    ★
+                  </Text>
+
+                </TouchableOpacity>
+
+              ))}
 
             </View>
 
-          ))
+            <Text style={styles.formLabel}>
+              Your Review
+            </Text>
 
-        )}
+            <TextInput
+              value={reviewText}
+              onChangeText={setReviewText}
+              placeholder="Write your review..."
+              placeholderTextColor="#777"
+              multiline
+              numberOfLines={4}
+              style={styles.reviewTextInput}
+            />
 
-      </View>
+            <TouchableOpacity
+              style={styles.submitReviewButton}
+              onPress={submitReview}
+              disabled={reviewLoading}
+            >
 
+              <Text style={styles.submitReviewText}>
+                {reviewLoading
+                  ? "Submitting..."
+                  : "Submit Review"}
+              </Text>
 
-      {/* CONTACT US */}
+            </TouchableOpacity>
 
-      <View style={styles.contactSection}>
+          </View>
 
-        <Text style={styles.bottomTitle}>
-          Contact Us
-        </Text>
+          {/* REVIEWS LIST */}
 
-        <Text style={styles.contactText}>
-          Have a question about a bike?
-        </Text>
+          {reviews.length === 0 ? (
 
-        <TouchableOpacity
-          style={styles.contactCall}
-          onPress={callNow}
-        >
-          <Text style={styles.contactButtonText}>
-            📞 Call Us
+            <Text style={styles.noReviews}>
+              No reviews yet. Be the first to
+              review BikesLand!
+            </Text>
+
+          ) : (
+
+            reviews.map((item) => {
+
+              const rating = Math.min(
+                5,
+                Math.max(
+                  0,
+                  Number(item.rating || 0)
+                )
+              );
+
+              return (
+                <View
+                  key={item.id}
+                  style={styles.reviewCard}
+                >
+
+                  <Text style={styles.stars}>
+                    {"★".repeat(rating)}
+                    {"☆".repeat(5 - rating)}
+                  </Text>
+
+                  <Text style={styles.reviewText}>
+                    "{item.review}"
+                  </Text>
+
+                  <Text style={styles.reviewer}>
+                    — {item.name}
+                  </Text>
+
+                </View>
+              );
+            })
+
+          )}
+
+        </View>
+
+        {/* CONTACT US */}
+
+        <View style={styles.contactSection}>
+
+          <Text style={styles.bottomTitle}>
+            Contact Us
           </Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.contactWhatsapp}
-          onPress={() => whatsapp("a bike")}
-        >
-          <Text style={styles.contactButtonText}>
-            💬 WhatsApp Us
+          <Text style={styles.contactText}>
+            Have a question about a bike?
           </Text>
-        </TouchableOpacity>
 
-        <Text style={styles.contactNumber}>
-          +91 63018 85817
-        </Text>
+          <TouchableOpacity
+            style={styles.contactCall}
+            onPress={callNow}
+          >
+            <Text style={styles.contactButtonText}>
+              📞 Call Us
+            </Text>
+          </TouchableOpacity>
 
-      </View>
+          <TouchableOpacity
+            style={styles.contactWhatsapp}
+            onPress={() => whatsapp("a bike")}
+          >
+            <Text style={styles.contactButtonText}>
+              💬 WhatsApp Us
+            </Text>
+          </TouchableOpacity>
 
+          <Text style={styles.contactNumber}>
+            +91 63018 85817
+          </Text>
 
-      {/* FOOTER */}
+        </View>
 
-      <View style={styles.footer}>
+        {/* FOOTER */}
 
-        <Text style={styles.footerLogo}>
-          BIKESLAND
-        </Text>
+        <View style={styles.footer}>
 
-        <Text style={styles.footerText}>
-          BUY • SELL • TRUST
-        </Text>
+          <Text style={styles.footerLogo}>
+            🏍️ BikesLand
+          </Text>
 
-        <Text style={styles.copyright}>
-          © 2026 BikesLand. All Rights Reserved.
-        </Text>
+          <Text style={styles.footerText}>
+            BUY • SELL • TRUST
+          </Text>
 
-      </View>
+          <View style={styles.footerLinks}>
 
-    </ScrollView>
+            <TouchableOpacity>
+              <Text style={styles.footerLink}>
+                About
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.footerDot}>
+              •
+            </Text>
+
+            <TouchableOpacity>
+              <Text style={styles.footerLink}>
+                Reviews
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.footerDot}>
+              •
+            </Text>
+
+            <TouchableOpacity onPress={callNow}>
+              <Text style={styles.footerLink}>
+                Contact
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+
+          <Text style={styles.footerPhone}>
+            📞 +91 6301885817
+          </Text>
+
+          <Text style={styles.copyright}>
+            © 2026 BikesLand
+          </Text>
+
+          <Text style={styles.founded}>
+            Founded by Kandhukuru Bhupathi Santosh
+          </Text>
+
+        </View>
+
+      </ScrollView>
+
+    </View>
   );
 }
-
 
 const styles = StyleSheet.create({
 
@@ -730,21 +748,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
 
-
-  /* HEADER */
+  /* FIXED HEADER */
 
   header: {
-    paddingTop: 42,
-    paddingBottom: 12,
+    height: 105,
+    paddingTop: 40,
+    paddingBottom: 8,
     alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#222",
+    backgroundColor: "#000",
     position: "relative",
+    zIndex: 10,
   },
 
   logo: {
     width: 150,
-    height: 48,
+    height: 43,
   },
 
   tagline: {
@@ -757,7 +777,7 @@ const styles = StyleSheet.create({
   settingsButton: {
     position: "absolute",
     right: 18,
-    top: 58,
+    top: 51,
     width: 42,
     height: 42,
     borderRadius: 21,
@@ -773,6 +793,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
 
+  contentScroll: {
+    flex: 1,
+  },
 
   /* HERO */
 
@@ -790,13 +813,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  heroSubtitle: {
-    color: "#999",
-    fontSize: 11,
-    marginTop: 6,
-    textAlign: "center",
-    lineHeight: 16,
-  },
+ heroSubtitle: {
+  color: "#999",
+  fontSize: 11,
+  marginTop: 8,
+  textAlign: "center",
+  lineHeight: 14,
+  
+},
 
   searchBox: {
     width: "100%",
@@ -806,7 +830,7 @@ const styles = StyleSheet.create({
 
   input: {
     flex: 1,
-    height: 48,
+    height: 40,
     backgroundColor: "#fff",
     borderRadius: 10,
     paddingHorizontal: 14,
@@ -815,7 +839,7 @@ const styles = StyleSheet.create({
   },
 
   searchButton: {
-    height: 48,
+    height: 40,
     backgroundColor: "#e50914",
     marginLeft: 8,
     paddingHorizontal: 18,
@@ -829,7 +853,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
   },
-
 
   /* FOUNDER */
 
@@ -847,11 +870,11 @@ const styles = StyleSheet.create({
   },
 
   founderCircle: {
-    width: 75,
-    height: 75,
+    width: 70,
+    height: 70,
     borderRadius: 37.5,
     overflow: "hidden",
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: "#d4af37",
   },
 
@@ -884,7 +907,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 4,
   },
-
 
   /* BIKES */
 
@@ -998,7 +1020,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-
   /* ABOUT */
 
   aboutSection: {
@@ -1031,7 +1052,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 12,
   },
-
 
   /* REVIEWS */
 
@@ -1072,7 +1092,6 @@ const styles = StyleSheet.create({
   },
 
   ratingStar: {
-    color: "#ffd400",
     fontSize: 27,
     marginRight: 5,
   },
@@ -1136,7 +1155,6 @@ const styles = StyleSheet.create({
     marginTop: 7,
   },
 
-
   /* CONTACT */
 
   contactSection: {
@@ -1185,13 +1203,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-
   /* FOOTER */
 
   footer: {
     alignItems: "center",
     paddingTop: 18,
     paddingBottom: 30,
+    backgroundColor: "#050505",
     borderTopWidth: 1,
     borderTopColor: "#222",
   },
@@ -1210,12 +1228,40 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  footerLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+  },
+
+  footerLink: {
+    color: "#aaa",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  footerDot: {
+    color: "#444",
+    marginHorizontal: 10,
+  },
+
+  footerPhone: {
+    color: "#777",
+    fontSize: 10,
+    marginTop: 14,
+  },
+
   copyright: {
     color: "#444",
     fontSize: 9,
     marginTop: 10,
   },
 
+  founded: {
+    color: "#333",
+    fontSize: 8,
+    marginTop: 4,
+  },
 
   /* MESSAGES */
 
@@ -1242,5 +1288,4 @@ const styles = StyleSheet.create({
     color: "#777",
     fontSize: 13,
   },
-
 });
