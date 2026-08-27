@@ -267,23 +267,46 @@ const filteredBikes = bikes.filter((bike) =>
                 className="bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:scale-105 transition"
               >
 
-                {/* BIKE IMAGE */}
-                {bike.image ? (
-                  <img
-                    src={bike.image}
-                    alt={bike.bikeName || "Bike"}
-                    className="w-full h-56 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-56 bg-gray-800 flex items-center justify-center">
-                    <p className="text-gray-500">
-                      Bike Image Coming Soon
-                    </p>
-                  </div>
-                )}
+                {/* BIKE PHOTOS SLIDER */}
+{Array.isArray(bike.images) && bike.images.length > 0 ? (
+  <div className="relative w-full overflow-hidden">
 
-                <div className="p-5">
+    <div className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth">
+      {bike.images.map((image: string, index: number) => (
+        <div
+          key={`${bike.id}-${index}`}
+          className="min-w-full h-56 snap-center flex-shrink-0 relative"
+        >
+          <img
+            src={image}
+            alt={`${bike.bikeName || "Bike"} Photo ${index + 1}`}
+            className="w-full h-56 object-cover"
+          />
 
+          {/* PHOTO COUNT */}
+          <div className="absolute top-3 right-3 bg-black/80 text-white px-3 py-1 rounded-full text-xs font-bold">
+            {index + 1} / {bike.images.length}
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+) : bike.image ? (
+  <img
+    src={bike.image}
+    alt={bike.bikeName || "Bike"}
+    className="w-full h-56 object-cover"
+  />
+) : (
+  <div className="w-full h-56 bg-gray-800 flex items-center justify-center">
+    <p className="text-gray-500">
+      Bike Image Coming Soon
+    </p>
+  </div>
+)}
+
+<div className="p-5">
                   {/* BIKE NAME */}
                   <h3 className="text-2xl font-bold">
                     {bike.bikeName}

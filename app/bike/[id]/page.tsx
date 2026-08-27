@@ -11,6 +11,7 @@ export default function BikeDetailsPage() {
 
   const [bike, setBike] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [currentImage, setCurrentImage] = useState(0);
 
   useEffect(() => {
     const fetchBike = async () => {
@@ -44,6 +45,7 @@ export default function BikeDetailsPage() {
       <main className="min-h-screen bg-[#050505] text-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-zinc-700 border-t-red-500 rounded-full animate-spin mx-auto" />
+
           <p className="mt-5 text-zinc-400">
             Loading bike details...
           </p>
@@ -56,7 +58,10 @@ export default function BikeDetailsPage() {
     return (
       <main className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center px-6">
         <div className="text-center">
-          <div className="text-6xl mb-5">🏍️</div>
+
+          <div className="text-6xl mb-5">
+            🏍️
+          </div>
 
           <h1 className="text-3xl font-bold">
             Bike Not Found
@@ -72,29 +77,69 @@ export default function BikeDetailsPage() {
           >
             ← Back to BikesLand
           </Link>
+
         </div>
       </main>
     );
   }
 
-  const imagePath =
-    bike.image && bike.image.trim() !== ""
-      ? bike.image
-      : "/bikes/classic4.jpg";
+  // =========================
+  // BIKE PHOTOS
+  // =========================
+
+  const bikeImages =
+    Array.isArray(bike.images) && bike.images.length > 0
+      ? bike.images
+      : bike.image
+        ? [bike.image]
+        : ["/bikes/classic4.jpg"];
+
+  // =========================
+  // NEXT PHOTO
+  // =========================
+
+  const nextImage = () => {
+    setCurrentImage((previous) =>
+      previous === bikeImages.length - 1
+        ? 0
+        : previous + 1
+    );
+  };
+
+  // =========================
+  // PREVIOUS PHOTO
+  // =========================
+
+  const previousImage = () => {
+    setCurrentImage((previous) =>
+      previous === 0
+        ? bikeImages.length - 1
+        : previous - 1
+    );
+  };
 
   return (
     <main className="min-h-screen bg-[#050505] text-white">
 
-      {/* Top Navigation */}
+      {/* =========================
+          TOP NAVIGATION
+      ========================= */}
+
       <header className="sticky top-0 z-50 bg-black/85 backdrop-blur-xl border-b border-white/10">
+
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
 
           <Link
             href="/"
             className="text-xl md:text-2xl font-black tracking-tight"
           >
-            <span className="text-red-500">BIKES</span>
-            <span className="text-white">LAND</span>
+            <span className="text-red-500">
+              BIKES
+            </span>
+
+            <span className="text-white">
+              LAND
+            </span>
           </Link>
 
           <Link
@@ -105,37 +150,135 @@ export default function BikeDetailsPage() {
           </Link>
 
         </div>
+
       </header>
 
-      {/* Main Content */}
+      {/* =========================
+          MAIN CONTENT
+      ========================= */}
+
       <div className="max-w-6xl mx-auto px-5 py-8 md:py-12">
 
-        {/* Premium Hero */}
+        {/* =========================
+            HERO SECTION
+        ========================= */}
+
         <section className="grid lg:grid-cols-[1.35fr_0.65fr] gap-6 items-stretch">
 
-          {/* Bike Image */}
+          {/* =========================
+              BIKE IMAGE SLIDER
+          ========================= */}
+
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900 to-black border border-white/10 shadow-2xl">
 
-            {/* Verified Badge */}
-            <div className="absolute top-5 left-5 z-10">
+            {/* VERIFIED BADGE */}
+
+            <div className="absolute top-5 left-5 z-20">
+
               <span className="inline-flex items-center gap-2 bg-black/75 backdrop-blur-md border border-green-500/40 text-green-400 px-4 py-2 rounded-full text-sm font-semibold">
                 ✓ BikesLand Verified
               </span>
+
             </div>
 
-            <div className="h-[320px] sm:h-[430px] lg:h-[520px] flex items-center justify-center p-4 md:p-8">
+            {/* MAIN IMAGE */}
 
-              <img
-                src={imagePath}
-                alt={bike.bikeName || "Bike"}
-                className="w-full h-full object-contain rounded-2xl"
-              />
+            <div className="p-4 md:p-8">
+
+              <div className="relative h-[320px] sm:h-[430px] lg:h-[520px] flex items-center justify-center">
+
+                <img
+                  src={bikeImages[currentImage]}
+                  alt={`${bike.bikeName || "Bike"} photo ${
+                    currentImage + 1
+                  }`}
+                  className="w-full h-full object-contain rounded-2xl"
+                />
+
+                {/* LEFT BUTTON */}
+
+                {bikeImages.length > 1 && (
+                  <button
+                    onClick={previousImage}
+                    aria-label="Previous photo"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/75 hover:bg-red-600 text-white text-3xl font-bold flex items-center justify-center transition"
+                  >
+                    ‹
+                  </button>
+                )}
+
+                {/* RIGHT BUTTON */}
+
+                {bikeImages.length > 1 && (
+                  <button
+                    onClick={nextImage}
+                    aria-label="Next photo"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/75 hover:bg-red-600 text-white text-3xl font-bold flex items-center justify-center transition"
+                  >
+                    ›
+                  </button>
+                )}
+
+              </div>
+
+              {/* PHOTO COUNT */}
+
+              {bikeImages.length > 1 && (
+                <p className="text-center text-zinc-400 text-sm mt-3">
+                  Photo {currentImage + 1} of{" "}
+                  {bikeImages.length}
+                </p>
+              )}
+
+              {/* THUMBNAILS */}
+
+              {bikeImages.length > 1 && (
+
+                <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
+
+                  {bikeImages.map(
+                    (image: string, index: number) => (
+
+                      <button
+                        key={`${image}-${index}`}
+                        onClick={() =>
+                          setCurrentImage(index)
+                        }
+                        aria-label={`Open photo ${
+                          index + 1
+                        }`}
+                        className={`flex-shrink-0 rounded-xl overflow-hidden border-2 transition ${
+                          currentImage === index
+                            ? "border-red-500"
+                            : "border-white/10 hover:border-white/40"
+                        }`}
+                      >
+
+                        <img
+                          src={image}
+                          alt={`Bike photo ${
+                            index + 1
+                          }`}
+                          className="w-20 h-16 object-cover"
+                        />
+
+                      </button>
+
+                    )
+                  )}
+
+                </div>
+
+              )}
 
             </div>
 
           </div>
 
-          {/* Bike Information */}
+          {/* =========================
+              BIKE INFORMATION
+          ========================= */}
+
           <div className="rounded-3xl bg-gradient-to-b from-zinc-900 to-zinc-950 border border-white/10 p-6 md:p-8 flex flex-col justify-between shadow-2xl">
 
             <div>
@@ -149,9 +292,18 @@ export default function BikeDetailsPage() {
               </h1>
 
               <div className="flex items-center gap-2 mt-4 text-zinc-400">
-                <span>📍</span>
-                <span>{bike.location || "Nellore"}</span>
+
+                <span>
+                  📍
+                </span>
+
+                <span>
+                  {bike.location || "Nellore"}
+                </span>
+
               </div>
+
+              {/* PRICE */}
 
               <div className="mt-8">
 
@@ -160,39 +312,47 @@ export default function BikeDetailsPage() {
                 </p>
 
                 <p className="text-4xl md:text-5xl font-black text-yellow-400 mt-1">
-  ₹{bike.price}
-</p>
+                  ₹{bike.price}
+                </p>
 
               </div>
 
-              {/* Quick Stats */}
+              {/* QUICK STATS */}
+
               <div className="grid grid-cols-2 gap-3 mt-8">
 
                 <div className="bg-black/50 border border-white/10 rounded-2xl p-4">
+
                   <p className="text-xs text-zinc-500">
                     YEAR
                   </p>
+
                   <p className="text-lg font-bold mt-1">
                     {bike.year || "N/A"}
                   </p>
+
                 </div>
 
                 <div className="bg-black/50 border border-white/10 rounded-2xl p-4">
+
                   <p className="text-xs text-zinc-500">
                     KM DRIVEN
                   </p>
+
                   <p className="text-lg font-bold mt-1">
                     {bike.kmDriven
                       ? `${bike.kmDriven} KM`
                       : "N/A"}
                   </p>
+
                 </div>
 
               </div>
 
             </div>
 
-            {/* Hero Buttons */}
+            {/* HERO BUTTONS */}
+
             <div className="mt-8 space-y-3">
 
               <a
@@ -219,12 +379,16 @@ export default function BikeDetailsPage() {
 
         </section>
 
-        {/* Specifications */}
+        {/* =========================
+            SPECIFICATIONS
+        ========================= */}
+
         <section className="mt-10">
 
           <div className="flex items-end justify-between mb-5">
 
             <div>
+
               <p className="text-red-500 text-xs font-bold uppercase tracking-[0.2em]">
                 Vehicle Information
               </p>
@@ -232,6 +396,7 @@ export default function BikeDetailsPage() {
               <h2 className="text-2xl md:text-3xl font-black mt-1">
                 Bike Specifications
               </h2>
+
             </div>
 
           </div>
@@ -239,52 +404,79 @@ export default function BikeDetailsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
 
             <div className="bg-zinc-900/80 border border-white/10 rounded-2xl p-5 hover:border-red-500/40 transition">
-              <p className="text-2xl">📅</p>
+
+              <p className="text-2xl">
+                📅
+              </p>
+
               <p className="text-xs text-zinc-500 mt-4">
                 YEAR
               </p>
+
               <p className="text-lg font-bold mt-1">
                 {bike.year || "Not Available"}
               </p>
+
             </div>
 
             <div className="bg-zinc-900/80 border border-white/10 rounded-2xl p-5 hover:border-red-500/40 transition">
-              <p className="text-2xl">🛣️</p>
+
+              <p className="text-2xl">
+                🛣️
+              </p>
+
               <p className="text-xs text-zinc-500 mt-4">
                 KM DRIVEN
               </p>
+
               <p className="text-lg font-bold mt-1">
                 {bike.kmDriven
                   ? `${bike.kmDriven} KM`
                   : "Not Available"}
               </p>
+
             </div>
 
             <div className="bg-zinc-900/80 border border-white/10 rounded-2xl p-5 hover:border-red-500/40 transition">
-              <p className="text-2xl">📍</p>
+
+              <p className="text-2xl">
+                📍
+              </p>
+
               <p className="text-xs text-zinc-500 mt-4">
                 LOCATION
               </p>
+
               <p className="text-lg font-bold mt-1 capitalize">
                 {bike.location || "Not Available"}
               </p>
+
             </div>
 
             <div className="bg-zinc-900/80 border border-white/10 rounded-2xl p-5 hover:border-red-500/40 transition">
-              <p className="text-2xl">🆔</p>
+
+              <p className="text-2xl">
+                🆔
+              </p>
+
               <p className="text-xs text-zinc-500 mt-4">
                 BIKE ID
               </p>
+
               <p className="text-sm font-bold mt-1 break-all text-zinc-300">
                 {bike.id}
               </p>
+
             </div>
 
           </div>
 
         </section>
 
-        {/* BikesLand Promise */}
+        {/* =========================
+            BIKESLAND PROMISE
+        ========================= */}
+
         <section className="mt-10">
 
           <div className="rounded-3xl overflow-hidden border border-red-500/20 bg-gradient-to-br from-red-950/30 via-zinc-950 to-black">
@@ -298,6 +490,7 @@ export default function BikeDetailsPage() {
                 </div>
 
                 <div>
+
                   <p className="text-xs text-red-500 uppercase tracking-[0.2em] font-bold">
                     Our Commitment
                   </p>
@@ -305,6 +498,7 @@ export default function BikeDetailsPage() {
                   <h2 className="text-2xl font-black mt-1">
                     BikesLand Promise
                   </h2>
+
                 </div>
 
               </div>
@@ -319,10 +513,12 @@ export default function BikeDetailsPage() {
                   "Quality Inspection by BikesLand",
                   "Dedicated Customer Support",
                 ].map((item) => (
+
                   <div
                     key={item}
                     className="flex items-center gap-3 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3"
                   >
+
                     <span className="text-green-400">
                       ✓
                     </span>
@@ -330,7 +526,9 @@ export default function BikeDetailsPage() {
                     <span className="text-zinc-300 text-sm">
                       {item}
                     </span>
+
                   </div>
+
                 ))}
 
               </div>
@@ -341,7 +539,10 @@ export default function BikeDetailsPage() {
 
         </section>
 
-        {/* Description */}
+        {/* =========================
+            DESCRIPTION
+        ========================= */}
+
         <section className="mt-10">
 
           <p className="text-red-500 text-xs font-bold uppercase tracking-[0.2em]">
@@ -363,7 +564,10 @@ export default function BikeDetailsPage() {
 
         </section>
 
-        {/* Final CTA */}
+        {/* =========================
+            FINAL CTA
+        ========================= */}
+
         <section className="mt-10 pb-12">
 
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-700 via-red-600 to-red-700 p-7 md:p-10 text-center">
@@ -412,7 +616,10 @@ export default function BikeDetailsPage() {
 
       </div>
 
-      {/* Footer */}
+      {/* =========================
+          FOOTER
+      ========================= */}
+
       <footer className="border-t border-white/10 py-7 text-center text-zinc-500 text-sm">
         🏍️ BikesLand — Trusted Second-Hand Bikes Marketplace
       </footer>
