@@ -24,9 +24,9 @@ export default function AddBikePage() {
     formData.append("file", file);
 
     formData.append(
-  "upload_preset",
-  "bikesland_upload"
-);
+      "upload_preset",
+      "bikesland_upload"
+    );
 
     const response = await fetch(
       "https://api.cloudinary.com/v1_1/vflu9vv4/image/upload",
@@ -38,15 +38,8 @@ export default function AddBikePage() {
 
     const responseText = await response.text();
 
-    console.log(
-      "Cloudinary Status:",
-      response.status
-    );
-
-    console.log(
-      "Cloudinary Response:",
-      responseText
-    );
+    console.log("Cloudinary Status:", response.status);
+    console.log("Cloudinary Response:", responseText);
 
     if (!response.ok) {
       throw new Error(
@@ -57,6 +50,56 @@ export default function AddBikePage() {
     const data = JSON.parse(responseText);
 
     return data.secure_url as string;
+  };
+
+  // =========================
+  // ADD PHOTOS
+  // =========================
+  const handlePhotoSelect = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newFiles = Array.from(
+      e.target.files || []
+    );
+
+    if (newFiles.length === 0) {
+      return;
+    }
+
+    const totalFiles =
+      imageFiles.length + newFiles.length;
+
+    if (totalFiles > 6) {
+      alert(
+        `Maximum 6 photos allowed.\n\nAlready selected: ${imageFiles.length}\nYou can add only ${
+          6 - imageFiles.length
+        } more photo${
+          6 - imageFiles.length === 1 ? "" : "s"
+        }.`
+      );
+
+      e.target.value = "";
+      return;
+    }
+
+    setImageFiles((previousFiles) => [
+      ...previousFiles,
+      ...newFiles,
+    ]);
+
+    // Reset input so the same photo can be selected again if needed
+    e.target.value = "";
+  };
+
+  // =========================
+  // REMOVE PHOTO
+  // =========================
+  const removePhoto = (index: number) => {
+    setImageFiles((previousFiles) =>
+      previousFiles.filter(
+        (_, photoIndex) => photoIndex !== index
+      )
+    );
   };
 
   // =========================
@@ -89,7 +132,7 @@ export default function AddBikePage() {
 
       const imageURLs: string[] = [];
 
-      // Upload every selected image
+      // Upload all selected photos
       for (const file of imageFiles) {
         const imageURL =
           await uploadToCloudinary(file);
@@ -98,7 +141,7 @@ export default function AddBikePage() {
       }
 
       // =========================
-      // SAVE BIKE TO FIRESTORE
+      // SAVE TO FIRESTORE
       // =========================
       await addDoc(collection(db, "bikes"), {
         bikeName: bikeName,
@@ -109,7 +152,10 @@ export default function AddBikePage() {
         year: year,
         kmDriven: kmDriven,
 
+        // First image
         image: imageURLs[0],
+
+        // All images
         images: imageURLs,
 
         description: description,
@@ -138,7 +184,6 @@ export default function AddBikePage() {
       if (fileInput) {
         fileInput.value = "";
       }
-
     } catch (error) {
       console.error(
         "Error adding bike:",
@@ -150,7 +195,6 @@ export default function AddBikePage() {
       } else {
         alert("Unknown error occurred");
       }
-
     } finally {
       setSaving(false);
     }
@@ -222,85 +266,105 @@ export default function AddBikePage() {
             className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          {/* PHOTOS */}
+          {/* =========================
+              BIKE PHOTOS
+          ========================= */}
           <div>
 
             <label className="block mb-2 font-semibold">
-              Bike Photos (Maximum 6)
+              Bike Photos
             </label>
+
+            <p className="text-gray-400 text-sm mb-3">
+              Add up to 6 photos. You can add
+              photos one by one.
+            </p>
+
+            {/* SELECT PHOTOS BUTTON */}
+            {imageFiles.length < 6 && (
+              <label
+                htmlFor="bikePhotos"
+                className="block w-full text-center cursor-pointer bg-red-600 hover:bg-red-700 p-3 rounded-lg font-bold"
+              >
+                📷{" "}
+                {imageFiles.length === 0
+                  ? "Choose First Photo"
+                  : "➕ Add More Photos"}
+              </label>
+            )}
 
             <input
               id="bikePhotos"
               type="file"
               accept="image/*"
               multiple
-              onChange={(e) => {
-
-                const files = Array.from(
-                  e.target.files || []
-                );
-
-                if (files.length > 6) {
-
-                  alert(
-                    "Please select maximum 6 photos"
-                  );
-
-                  e.target.value = "";
-                  setImageFiles([]);
-
-                  return;
-                }
-
-                setImageFiles(files);
-
-              }}
-              className="w-full p-3 rounded bg-gray-800 border border-gray-700"
+              onChange={handlePhotoSelect}
+              className="hidden"
             />
 
+            {/* PHOTO COUNT */}
             {imageFiles.length > 0 && (
-              <p className="text-green-400 mt-2 text-sm">
-                ✅ {imageFiles.length} photo
-                {imageFiles.length > 1
-                  ? "s"
-                  : ""}{" "}
-                selected
-              </p>
+              <div className="mt-3 bg-gray-800 rounded-lg p-3">
+                <p className="text-green-400 font-semibold">
+                  ✅ {imageFiles.length} / 6 photos selected
+                </p>
+
+                {imageFiles.length < 6 && (
+                  <p className="text-gray-400 text-xs mt-1">
+                    You can add{" "}
+                    {6 - imageFiles.length} more
+                    photo
+                    {6 - imageFiles.length === 1
+                      ? ""
+                      : "s"}.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* PHOTO PREVIEWS */}
+            {imageFiles.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+
+                {imageFiles.map(
+                  (file, index) => (
+
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="relative bg-black rounded-lg overflow-hidden border border-gray-700"
+                    >
+
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Bike Photo ${index + 1}`}
+                        className="w-full h-28 object-cover"
+                      />
+
+                      {/* PHOTO NUMBER */}
+                      <span className="absolute top-2 left-2 bg-black/80 px-2 py-1 rounded text-xs font-bold">
+                        Photo {index + 1}
+                      </span>
+
+                      {/* REMOVE BUTTON */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          removePhoto(index)
+                        }
+                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 w-7 h-7 rounded-full font-bold"
+                      >
+                        ×
+                      </button>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
             )}
 
           </div>
-
-          {/* PHOTO PREVIEW */}
-          {imageFiles.length > 0 && (
-
-            <div className="grid grid-cols-3 gap-3">
-
-              {imageFiles.map(
-                (file, index) => (
-
-                  <div
-                    key={`${file.name}-${index}`}
-                    className="relative"
-                  >
-
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`Bike ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-lg border border-gray-700"
-                    />
-
-                    <span className="absolute bottom-1 left-1 bg-black/70 px-2 py-1 rounded text-xs">
-                      {index + 1}
-                    </span>
-
-                  </div>
-
-                )
-              )}
-
-            </div>
-
-          )}
 
           {/* DESCRIPTION */}
           <textarea
