@@ -2,6 +2,7 @@
   "name": "bikesland",
   "version": "0.1.0",
   "private": true,
+  "main": "expo-router/entry",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,21 +10,26 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "expo": "~57.0.0",
+    "expo": "~57.0.16",
+    "expo-constants": "~57.0.14",
+    "expo-linking": "~57.0.7",
+    "expo-notifications": "~57.0.14",
+    "expo-router": "~57.0.16",
     "firebase": "^12.18.0",
     "next": "16.2.10",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5"
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-safe-area-context": "~5.7.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "~19.1.10",
-    "@types/react-dom": "~19.1.7",
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
-    "typescript": "~5.9.2"
+    "typescript": "^6.0.3"
   }
 }
