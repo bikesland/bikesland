@@ -56,6 +56,14 @@ export default function HomeScreen() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewLoading, setReviewLoading] = useState(false);
 
+  /* NOTIFICATION REGISTRATION */
+
+  // useEffect(() => {
+//   registerForPushNotificationsAsync();
+// }, []);
+
+  /* LOAD REVIEWS */
+
   const loadReviews = async () => {
     try {
       const reviewsQuery = query(
@@ -71,7 +79,13 @@ export default function HomeScreen() {
         return {
           id: doc.id,
           name: String(data.name || "Customer"),
-          review: String(data.review || ""),
+
+          // Supports old "comment" field
+          // and new "review" field
+          review: String(
+            data.comment || data.review || ""
+          ),
+
           rating: Number(data.rating || 5),
         };
       });
@@ -82,70 +96,94 @@ export default function HomeScreen() {
     }
   };
 
+  /* LOAD BIKES */
+
   useEffect(() => {
     const loadBikes = async () => {
       try {
         setLoading(true);
         setFirebaseError("");
 
-        const snapshot = await getDocs(collection(db, "bikes"));
+        const snapshot = await getDocs(
+          collection(db, "bikes")
+        );
 
-        const firebaseBikes: Bike[] = snapshot.docs.map((doc) => {
-          const data = doc.data();
+        const firebaseBikes: Bike[] = snapshot.docs.map(
+          (doc) => {
+            const data = doc.data();
 
-          let images: string[] = [];
+            let images: string[] = [];
 
-          if (Array.isArray(data.images)) {
-            images = data.images
-              .filter((img: unknown) => img)
-              .map((img: unknown) => {
-                const image = String(img);
+            if (Array.isArray(data.images)) {
+              images = data.images
+                .filter((img: unknown) => img)
+                .map((img: unknown) => {
+                  const image = String(img);
 
-                return image.startsWith("http")
-                  ? image
-                  : `https://bikesland.in${image}`;
-              });
+                  return image.startsWith("http")
+                    ? image
+                    : `https://bikesland.in${image}`;
+                });
+            }
+
+            const singleImage = data.image
+              ? String(data.image).startsWith("http")
+                ? String(data.image)
+                : `https://bikesland.in${data.image}`
+              : "";
+
+            if (
+              images.length === 0 &&
+              singleImage
+            ) {
+              images = [singleImage];
+            }
+
+            return {
+              id: doc.id,
+
+              name: String(
+                data.name ||
+                  data.bikeName ||
+                  data.bikename ||
+                  "Bike"
+              ),
+
+              imageUrl: singleImage,
+              images,
+
+              year: String(data.year || ""),
+
+              location: String(
+                data.location || ""
+              ),
+
+              km: String(
+                data.km ||
+                  data.kmDriven ||
+                  data.kilometers ||
+                  ""
+              ),
+
+              price: String(data.price || ""),
+
+              description: String(
+                data.description || ""
+              ),
+            };
           }
-
-          const singleImage = data.image
-            ? String(data.image).startsWith("http")
-              ? String(data.image)
-              : `https://bikesland.in${data.image}`
-            : "";
-
-          if (images.length === 0 && singleImage) {
-            images = [singleImage];
-          }
-
-          return {
-            id: doc.id,
-            name: String(
-              data.name ||
-                data.bikeName ||
-                data.bikename ||
-                "Bike"
-            ),
-            imageUrl: singleImage,
-            images,
-            year: String(data.year || ""),
-            location: String(data.location || ""),
-            km: String(
-              data.km ||
-                data.kmDriven ||
-                data.kilometers ||
-                ""
-            ),
-            price: String(data.price || ""),
-            description: String(data.description || ""),
-          };
-        });
+        );
 
         setBikes(firebaseBikes);
       } catch (error: any) {
-        console.log("Firebase Error:", error);
+        console.log(
+          "Firebase Error:",
+          error
+        );
 
         setFirebaseError(
-          error?.message || "Unable to load bikes"
+          error?.message ||
+            "Unable to load bikes"
         );
       } finally {
         setLoading(false);
@@ -156,9 +194,15 @@ export default function HomeScreen() {
     loadReviews();
   }, []);
 
+  /* CALL */
+
   const callNow = () => {
-    Linking.openURL("tel:+916301885817");
+    Linking.openURL(
+      "tel:+916301885817"
+    );
   };
+
+  /* WHATSAPP */
 
   const whatsapp = (bikeName: string) => {
     const message =
@@ -170,6 +214,8 @@ export default function HomeScreen() {
       )}`
     );
   };
+
+  /* SUBMIT REVIEW */
 
   const submitReview = async () => {
     if (!reviewName.trim()) {
@@ -190,12 +236,15 @@ export default function HomeScreen() {
     try {
       setReviewLoading(true);
 
-      await addDoc(collection(db, "reviews"), {
-        name: reviewName.trim(),
-        review: reviewText.trim(),
-        rating: reviewRating,
-        createdAt: serverTimestamp(),
-      });
+      await addDoc(
+        collection(db, "reviews"),
+        {
+          name: reviewName.trim(),
+          review: reviewText.trim(),
+          rating: reviewRating,
+          createdAt: serverTimestamp(),
+        }
+      );
 
       setReviewName("");
       setReviewText("");
@@ -203,9 +252,14 @@ export default function HomeScreen() {
 
       await loadReviews();
 
-      alert("Thank you! Your review has been submitted.");
+      alert(
+        "Thank you! Your review has been submitted."
+      );
     } catch (error) {
-      console.log("Submit Review Error:", error);
+      console.log(
+        "Submit Review Error:",
+        error
+      );
 
       alert(
         "Unable to submit review. Please try again."
@@ -215,26 +269,31 @@ export default function HomeScreen() {
     }
   };
 
-  const filteredBikes = bikes.filter((bike) =>
-    bike.name
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  /* SEARCH */
+
+  const filteredBikes = bikes.filter(
+    (bike) =>
+      bike.name
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
   );
 
   return (
     <View style={styles.container}>
 
-      {/* FIXED HEADER */}
+      {/* HEADER */}
 
       <View style={styles.header}>
 
         <Image
-          source={require("../../assets/images/logo.png")}
+          source={require(
+            "../../assets/images/logo.png"
+          )}
           style={styles.logo}
           resizeMode="contain"
         />
-
-        
 
         <Text style={styles.tagline}>
           BUY • SELL • TRUST
@@ -242,7 +301,7 @@ export default function HomeScreen() {
 
       </View>
 
-      {/* SCROLLABLE CONTENT */}
+      {/* CONTENT */}
 
       <ScrollView
         style={styles.contentScroll}
@@ -305,8 +364,8 @@ export default function HomeScreen() {
           <View style={styles.founderInfo}>
 
             <Text style={styles.founderLabel}>
-  FOUNDER & CEO | BIKESLAND
-</Text>
+              FOUNDER & CEO | BIKESLAND
+            </Text>
 
             <Text style={styles.founderName}>
               Kandhukuru Bhupathi Santosh
@@ -372,22 +431,35 @@ export default function HomeScreen() {
 
                         <View
                           key={`${bike.id}-${index}`}
-                          style={styles.photoContainer}
+                          style={
+                            styles.photoContainer
+                          }
                         >
 
                           <Image
-                            source={{ uri: image }}
-                            style={styles.bikeImage}
+                            source={{
+                              uri: image,
+                            }}
+                            style={
+                              styles.bikeImage
+                            }
                             resizeMode="cover"
                           />
 
-                          <View style={styles.counter}>
+                          <View
+                            style={
+                              styles.counter
+                            }
+                          >
 
                             <Text
-                              style={styles.counterText}
+                              style={
+                                styles.counterText
+                              }
                             >
                               {index + 1} /{" "}
-                              {bike.images?.length || 1}
+                              {bike.images
+                                ?.length || 1}
                             </Text>
 
                           </View>
@@ -401,9 +473,15 @@ export default function HomeScreen() {
 
                 ) : (
 
-                  <View style={styles.noImage}>
+                  <View
+                    style={styles.noImage}
+                  >
 
-                    <Text style={styles.noImageText}>
+                    <Text
+                      style={
+                        styles.noImageText
+                      }
+                    >
                       Bike Image
                     </Text>
 
@@ -411,32 +489,48 @@ export default function HomeScreen() {
 
                 )}
 
-                <View style={styles.cardContent}>
+                <View
+                  style={styles.cardContent}
+                >
 
-                  <Text style={styles.bikeName}>
+                  <Text
+                    style={styles.bikeName}
+                  >
                     {bike.name}
                   </Text>
 
-                  <Text style={styles.info}>
+                  <Text
+                    style={styles.info}
+                  >
                     📅 Year: {bike.year}
                   </Text>
 
-                  <Text style={styles.info}>
+                  <Text
+                    style={styles.info}
+                  >
                     📍 {bike.location}
                   </Text>
 
-                  <Text style={styles.info}>
+                  <Text
+                    style={styles.info}
+                  >
                     🛣 KM Driven: {bike.km}
                   </Text>
 
-                  <Text style={styles.price}>
+                  <Text
+                    style={styles.price}
+                  >
                     {bike.price}
                   </Text>
 
-                  <View style={styles.buttons}>
+                  <View
+                    style={styles.buttons}
+                  >
 
                     <TouchableOpacity
-                      style={styles.viewButton}
+                      style={
+                        styles.viewButton
+                      }
                       onPress={() =>
                         router.push({
                           pathname:
@@ -447,29 +541,53 @@ export default function HomeScreen() {
                         })
                       }
                     >
-                      <Text style={styles.buttonText}>
+
+                      <Text
+                        style={
+                          styles.buttonText
+                        }
+                      >
                         View Details
                       </Text>
+
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.callButton}
+                      style={
+                        styles.callButton
+                      }
                       onPress={callNow}
                     >
-                      <Text style={styles.buttonText}>
+
+                      <Text
+                        style={
+                          styles.buttonText
+                        }
+                      >
                         Call
                       </Text>
+
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.whatsappButton}
+                      style={
+                        styles.whatsappButton
+                      }
                       onPress={() =>
-                        whatsapp(bike.name)
+                        whatsapp(
+                          bike.name
+                        )
                       }
                     >
-                      <Text style={styles.buttonText}>
+
+                      <Text
+                        style={
+                          styles.buttonText
+                        }
+                      >
                         WhatsApp
                       </Text>
+
                     </TouchableOpacity>
 
                   </View>
@@ -484,108 +602,146 @@ export default function HomeScreen() {
 
         </View>
 
-        {/* ABOUT BIKESLAND */}
+        {/* ABOUT */}
 
-        <View style={styles.aboutSection}>
+        <View
+          style={styles.aboutSection}
+        >
 
-          <Text style={styles.bottomTitle}>
+          <Text
+            style={styles.bottomTitle}
+          >
             About BikesLand
           </Text>
 
-          <Text style={styles.bottomText}>
-            BikesLand is a trusted platform for
-            buying and selling quality second-hand
-            bikes. Our goal is to make every bike
-            purchase simple, transparent and
+          <Text
+            style={styles.bottomText}
+          >
+            BikesLand is a trusted platform
+            for buying and selling quality
+            second-hand bikes. Our goal is
+            to make every bike purchase
+            simple, transparent and
             trustworthy.
           </Text>
 
-          <Text style={styles.promise}>
+          <Text
+            style={styles.promise}
+          >
             🏍️ Quality Bikes  •  🤝 Trusted Service
           </Text>
 
         </View>
 
-        {/* CUSTOMER REVIEWS */}
+        {/* REVIEWS */}
 
-        <View style={styles.reviewsSection}>
+        <View
+          style={styles.reviewsSection}
+        >
 
-          <Text style={styles.bottomTitle}>
+          <Text
+            style={styles.bottomTitle}
+          >
             Customer Reviews
           </Text>
 
-          {/* REVIEW FORM */}
+          <View
+            style={styles.reviewForm}
+          >
 
-          <View style={styles.reviewForm}>
-
-            <Text style={styles.formLabel}>
+            <Text
+              style={styles.formLabel}
+            >
               Your Name
             </Text>
 
             <TextInput
               value={reviewName}
-              onChangeText={setReviewName}
+              onChangeText={
+                setReviewName
+              }
               placeholder="Enter your name"
               placeholderTextColor="#777"
               style={styles.reviewInput}
             />
 
-            <Text style={styles.formLabel}>
+            <Text
+              style={styles.formLabel}
+            >
               Your Rating
             </Text>
 
-            <View style={styles.ratingRow}>
+            <View
+              style={styles.ratingRow}
+            >
 
-              {[1, 2, 3, 4, 5].map((star) => (
+              {[1, 2, 3, 4, 5].map(
+                (star) => (
 
-                <TouchableOpacity
-                  key={star}
-                  onPress={() =>
-                    setReviewRating(star)
-                  }
-                >
-
-                  <Text
-                    style={[
-                      styles.ratingStar,
-                      {
-                        color:
-                          star <= reviewRating
-                            ? "#ffd400"
-                            : "#555",
-                      },
-                    ]}
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() =>
+                      setReviewRating(
+                        star
+                      )
+                    }
                   >
-                    ★
-                  </Text>
 
-                </TouchableOpacity>
+                    <Text
+                      style={[
+                        styles.ratingStar,
+                        {
+                          color:
+                            star <=
+                            reviewRating
+                              ? "#ffd400"
+                              : "#555",
+                        },
+                      ]}
+                    >
+                      ★
+                    </Text>
 
-              ))}
+                  </TouchableOpacity>
+
+                )
+              )}
 
             </View>
 
-            <Text style={styles.formLabel}>
+            <Text
+              style={styles.formLabel}
+            >
               Your Review
             </Text>
 
             <TextInput
               value={reviewText}
-              onChangeText={setReviewText}
+              onChangeText={
+                setReviewText
+              }
               placeholder="Write your review..."
               placeholderTextColor="#777"
               multiline
               numberOfLines={4}
-              style={styles.reviewTextInput}
+              style={
+                styles.reviewTextInput
+              }
             />
 
             <TouchableOpacity
-              style={styles.submitReviewButton}
+              style={
+                styles.submitReviewButton
+              }
               onPress={submitReview}
               disabled={reviewLoading}
             >
 
-              <Text style={styles.submitReviewText}>
+              <Text
+                style={
+                  styles.submitReviewText
+                }
+              >
                 {reviewLoading
                   ? "Submitting..."
                   : "Submit Review"}
@@ -595,13 +751,13 @@ export default function HomeScreen() {
 
           </View>
 
-          {/* REVIEWS LIST */}
-
           {reviews.length === 0 ? (
 
-            <Text style={styles.noReviews}>
-              No reviews yet. Be the first to
-              review BikesLand!
+            <Text
+              style={styles.noReviews}
+            >
+              No reviews yet. Be the first
+              to review BikesLand!
             </Text>
 
           ) : (
@@ -612,26 +768,44 @@ export default function HomeScreen() {
                 5,
                 Math.max(
                   0,
-                  Number(item.rating || 0)
+                  Number(
+                    item.rating || 0
+                  )
                 )
               );
 
               return (
                 <View
                   key={item.id}
-                  style={styles.reviewCard}
+                  style={
+                    styles.reviewCard
+                  }
                 >
 
-                  <Text style={styles.stars}>
-                    {"★".repeat(rating)}
-                    {"☆".repeat(5 - rating)}
+                  <Text
+                    style={styles.stars}
+                  >
+                    {"★".repeat(
+                      rating
+                    )}
+                    {"☆".repeat(
+                      5 - rating
+                    )}
                   </Text>
 
-                  <Text style={styles.reviewText}>
+                  <Text
+                    style={
+                      styles.reviewText
+                    }
+                  >
                     "{item.review}"
                   </Text>
 
-                  <Text style={styles.reviewer}>
+                  <Text
+                    style={
+                      styles.reviewer
+                    }
+                  >
                     — {item.name}
                   </Text>
 
@@ -643,15 +817,21 @@ export default function HomeScreen() {
 
         </View>
 
-        {/* CONTACT US */}
+        {/* CONTACT */}
 
-        <View style={styles.contactSection}>
+        <View
+          style={styles.contactSection}
+        >
 
-          <Text style={styles.bottomTitle}>
+          <Text
+            style={styles.bottomTitle}
+          >
             Contact Us
           </Text>
 
-          <Text style={styles.contactText}>
+          <Text
+            style={styles.contactText}
+          >
             Have a question about a bike?
           </Text>
 
@@ -659,21 +839,39 @@ export default function HomeScreen() {
             style={styles.contactCall}
             onPress={callNow}
           >
-            <Text style={styles.contactButtonText}>
+
+            <Text
+              style={
+                styles.contactButtonText
+              }
+            >
               📞 Call Us
             </Text>
+
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.contactWhatsapp}
-            onPress={() => whatsapp("a bike")}
+            style={
+              styles.contactWhatsapp
+            }
+            onPress={() =>
+              whatsapp("a bike")
+            }
           >
-            <Text style={styles.contactButtonText}>
+
+            <Text
+              style={
+                styles.contactButtonText
+              }
+            >
               💬 WhatsApp Us
             </Text>
+
           </TouchableOpacity>
 
-          <Text style={styles.contactNumber}>
+          <Text
+            style={styles.contactNumber}
+          >
             +91 63018 85817
           </Text>
 
@@ -683,54 +881,79 @@ export default function HomeScreen() {
 
         <View style={styles.footer}>
 
-          <Text style={styles.footerLogo}>
+          <Text
+            style={styles.footerLogo}
+          >
             🏍️ BikesLand
           </Text>
 
-          <Text style={styles.footerText}>
+          <Text
+            style={styles.footerText}
+          >
             BUY • SELL • TRUST
           </Text>
 
-          <View style={styles.footerLinks}>
+          <View
+            style={styles.footerLinks}
+          >
 
             <TouchableOpacity>
-              <Text style={styles.footerLink}>
+              <Text
+                style={styles.footerLink}
+              >
                 About
               </Text>
             </TouchableOpacity>
 
-            <Text style={styles.footerDot}>
+            <Text
+              style={styles.footerDot}
+            >
               •
             </Text>
 
             <TouchableOpacity>
-              <Text style={styles.footerLink}>
+              <Text
+                style={styles.footerLink}
+              >
                 Reviews
               </Text>
             </TouchableOpacity>
 
-            <Text style={styles.footerDot}>
+            <Text
+              style={styles.footerDot}
+            >
               •
             </Text>
 
-            <TouchableOpacity onPress={callNow}>
-              <Text style={styles.footerLink}>
+            <TouchableOpacity
+              onPress={callNow}
+            >
+              <Text
+                style={styles.footerLink}
+              >
                 Contact
               </Text>
             </TouchableOpacity>
 
           </View>
 
-          <Text style={styles.footerPhone}>
+          <Text
+            style={styles.footerPhone}
+          >
             📞 +91 6301885817
           </Text>
 
-          <Text style={styles.copyright}>
+          <Text
+            style={styles.copyright}
+          >
             © 2026 BikesLand
           </Text>
 
-          <Text style={styles.founded}>
-            Founded by Kandhukuru Bhupathi Santosh
+          <Text
+            style={styles.founded}
+          >
+            Founded by Kandhukuru
+            Bhupathi Santosh
           </Text>
 
         </View>
@@ -742,13 +965,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     backgroundColor: "#000",
   },
-
-  /* FIXED HEADER */
 
   header: {
     height: 105,
@@ -797,8 +1017,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  /* HERO */
-
   hero: {
     alignItems: "center",
     paddingHorizontal: 16,
@@ -813,14 +1031,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
- heroSubtitle: {
-  color: "#999",
-  fontSize: 11,
-  marginTop: 8,
-  textAlign: "center",
-  lineHeight: 14,
-  
-},
+  heroSubtitle: {
+    color: "#999",
+    fontSize: 11,
+    marginTop: 8,
+    textAlign: "center",
+    lineHeight: 14,
+  },
 
   searchBox: {
     width: "100%",
@@ -853,8 +1070,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
   },
-
-  /* FOUNDER */
 
   founderSection: {
     flexDirection: "row",
@@ -908,8 +1123,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  /* BIKES */
-
   sectionTitle: {
     color: "#fff",
     fontSize: 24,
@@ -948,7 +1161,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: "rgba(0,0,0,0.75)",
+    backgroundColor:
+      "rgba(0,0,0,0.75)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 15,
@@ -1020,8 +1234,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  /* ABOUT */
-
   aboutSection: {
     marginHorizontal: 16,
     marginTop: 10,
@@ -1052,8 +1264,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 12,
   },
-
-  /* REVIEWS */
 
   reviewsSection: {
     marginHorizontal: 16,
@@ -1155,8 +1365,6 @@ const styles = StyleSheet.create({
     marginTop: 7,
   },
 
-  /* CONTACT */
-
   contactSection: {
     marginHorizontal: 16,
     marginBottom: 20,
@@ -1202,8 +1410,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 10,
   },
-
-  /* FOOTER */
 
   footer: {
     alignItems: "center",
@@ -1262,8 +1468,6 @@ const styles = StyleSheet.create({
     fontSize: 8,
     marginTop: 4,
   },
-
-  /* MESSAGES */
 
   message: {
     color: "#aaa",
