@@ -487,7 +487,7 @@ const filteredBikes = bikes.filter((bike) =>
           </div>
 
           <p className="mt-3 text-gray-300">
-  {review.review}
+  {review.comment}
 </p>
 
         </div>
