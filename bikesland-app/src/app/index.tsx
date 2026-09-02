@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { useRouter } from "expo-router";
 import {
   addDoc,
@@ -56,12 +57,6 @@ export default function HomeScreen() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  /* NOTIFICATION REGISTRATION */
-
-  // useEffect(() => {
-//   registerForPushNotificationsAsync();
-// }, []);
-
   /* LOAD REVIEWS */
 
   const loadReviews = async () => {
@@ -79,13 +74,9 @@ export default function HomeScreen() {
         return {
           id: doc.id,
           name: String(data.name || "Customer"),
-
-          // Supports old "comment" field
-          // and new "review" field
           review: String(
             data.comment || data.review || ""
           ),
-
           rating: Number(data.rating || 5),
         };
       });
@@ -283,7 +274,9 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
 
-      {/* HEADER */}
+      {/* =========================
+          HEADER
+      ========================= */}
 
       <View style={styles.header}>
 
@@ -295,13 +288,22 @@ export default function HomeScreen() {
           resizeMode="contain"
         />
 
-        <Text style={styles.tagline}>
-          BUY • SELL • TRUST
-        </Text>
+        
+        {/* NOTIFICATION BELL */}
+
+        <TouchableOpacity
+  style={styles.notificationButton}
+  onPress={() => router.push("/notifications")}
+  activeOpacity={0.7}
+>
+  <Text style={styles.notificationIcon}>🔔</Text>
+</TouchableOpacity>
 
       </View>
 
-      {/* CONTENT */}
+      {/* =========================
+          CONTENT
+      ========================= */}
 
       <ScrollView
         style={styles.contentScroll}
@@ -431,35 +433,26 @@ export default function HomeScreen() {
 
                         <View
                           key={`${bike.id}-${index}`}
-                          style={
-                            styles.photoContainer
-                          }
+                          style={styles.photoContainer}
                         >
 
                           <Image
                             source={{
                               uri: image,
                             }}
-                            style={
-                              styles.bikeImage
-                            }
+                            style={styles.bikeImage}
                             resizeMode="cover"
                           />
 
                           <View
-                            style={
-                              styles.counter
-                            }
+                            style={styles.counter}
                           >
 
                             <Text
-                              style={
-                                styles.counterText
-                              }
+                              style={styles.counterText}
                             >
                               {index + 1} /{" "}
-                              {bike.images
-                                ?.length || 1}
+                              {bike.images?.length || 1}
                             </Text>
 
                           </View>
@@ -473,14 +466,10 @@ export default function HomeScreen() {
 
                 ) : (
 
-                  <View
-                    style={styles.noImage}
-                  >
+                  <View style={styles.noImage}>
 
                     <Text
-                      style={
-                        styles.noImageText
-                      }
+                      style={styles.noImageText}
                     >
                       Bike Image
                     </Text>
@@ -499,38 +488,26 @@ export default function HomeScreen() {
                     {bike.name}
                   </Text>
 
-                  <Text
-                    style={styles.info}
-                  >
+                  <Text style={styles.info}>
                     📅 Year: {bike.year}
                   </Text>
 
-                  <Text
-                    style={styles.info}
-                  >
+                  <Text style={styles.info}>
                     📍 {bike.location}
                   </Text>
 
-                  <Text
-                    style={styles.info}
-                  >
+                  <Text style={styles.info}>
                     🛣 KM Driven: {bike.km}
                   </Text>
 
-                  <Text
-                    style={styles.price}
-                  >
+                  <Text style={styles.price}>
                     {bike.price}
                   </Text>
 
-                  <View
-                    style={styles.buttons}
-                  >
+                  <View style={styles.buttons}>
 
                     <TouchableOpacity
-                      style={
-                        styles.viewButton
-                      }
+                      style={styles.viewButton}
                       onPress={() =>
                         router.push({
                           pathname:
@@ -543,9 +520,7 @@ export default function HomeScreen() {
                     >
 
                       <Text
-                        style={
-                          styles.buttonText
-                        }
+                        style={styles.buttonText}
                       >
                         View Details
                       </Text>
@@ -553,16 +528,12 @@ export default function HomeScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={
-                        styles.callButton
-                      }
+                      style={styles.callButton}
                       onPress={callNow}
                     >
 
                       <Text
-                        style={
-                          styles.buttonText
-                        }
+                        style={styles.buttonText}
                       >
                         Call
                       </Text>
@@ -570,20 +541,14 @@ export default function HomeScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={
-                        styles.whatsappButton
-                      }
+                      style={styles.whatsappButton}
                       onPress={() =>
-                        whatsapp(
-                          bike.name
-                        )
+                        whatsapp(bike.name)
                       }
                     >
 
                       <Text
-                        style={
-                          styles.buttonText
-                        }
+                        style={styles.buttonText}
                       >
                         WhatsApp
                       </Text>
@@ -604,19 +569,13 @@ export default function HomeScreen() {
 
         {/* ABOUT */}
 
-        <View
-          style={styles.aboutSection}
-        >
+        <View style={styles.aboutSection}>
 
-          <Text
-            style={styles.bottomTitle}
-          >
+          <Text style={styles.bottomTitle}>
             About BikesLand
           </Text>
 
-          <Text
-            style={styles.bottomText}
-          >
+          <Text style={styles.bottomText}>
             BikesLand is a trusted platform
             for buying and selling quality
             second-hand bikes. Our goal is
@@ -625,9 +584,7 @@ export default function HomeScreen() {
             trustworthy.
           </Text>
 
-          <Text
-            style={styles.promise}
-          >
+          <Text style={styles.promise}>
             🏍️ Quality Bikes  •  🤝 Trusted Service
           </Text>
 
@@ -635,45 +592,31 @@ export default function HomeScreen() {
 
         {/* REVIEWS */}
 
-        <View
-          style={styles.reviewsSection}
-        >
+        <View style={styles.reviewsSection}>
 
-          <Text
-            style={styles.bottomTitle}
-          >
+          <Text style={styles.bottomTitle}>
             Customer Reviews
           </Text>
 
-          <View
-            style={styles.reviewForm}
-          >
+          <View style={styles.reviewForm}>
 
-            <Text
-              style={styles.formLabel}
-            >
+            <Text style={styles.formLabel}>
               Your Name
             </Text>
 
             <TextInput
               value={reviewName}
-              onChangeText={
-                setReviewName
-              }
+              onChangeText={setReviewName}
               placeholder="Enter your name"
               placeholderTextColor="#777"
               style={styles.reviewInput}
             />
 
-            <Text
-              style={styles.formLabel}
-            >
+            <Text style={styles.formLabel}>
               Your Rating
             </Text>
 
-            <View
-              style={styles.ratingRow}
-            >
+            <View style={styles.ratingRow}>
 
               {[1, 2, 3, 4, 5].map(
                 (star) => (
@@ -681,9 +624,7 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     key={star}
                     onPress={() =>
-                      setReviewRating(
-                        star
-                      )
+                      setReviewRating(star)
                     }
                   >
 
@@ -692,8 +633,7 @@ export default function HomeScreen() {
                         styles.ratingStar,
                         {
                           color:
-                            star <=
-                            reviewRating
+                            star <= reviewRating
                               ? "#ffd400"
                               : "#555",
                         },
@@ -709,38 +649,28 @@ export default function HomeScreen() {
 
             </View>
 
-            <Text
-              style={styles.formLabel}
-            >
+            <Text style={styles.formLabel}>
               Your Review
             </Text>
 
             <TextInput
               value={reviewText}
-              onChangeText={
-                setReviewText
-              }
+              onChangeText={setReviewText}
               placeholder="Write your review..."
               placeholderTextColor="#777"
               multiline
               numberOfLines={4}
-              style={
-                styles.reviewTextInput
-              }
+              style={styles.reviewTextInput}
             />
 
             <TouchableOpacity
-              style={
-                styles.submitReviewButton
-              }
+              style={styles.submitReviewButton}
               onPress={submitReview}
               disabled={reviewLoading}
             >
 
               <Text
-                style={
-                  styles.submitReviewText
-                }
+                style={styles.submitReviewText}
               >
                 {reviewLoading
                   ? "Submitting..."
@@ -753,9 +683,7 @@ export default function HomeScreen() {
 
           {reviews.length === 0 ? (
 
-            <Text
-              style={styles.noReviews}
-            >
+            <Text style={styles.noReviews}>
               No reviews yet. Be the first
               to review BikesLand!
             </Text>
@@ -768,44 +696,28 @@ export default function HomeScreen() {
                 5,
                 Math.max(
                   0,
-                  Number(
-                    item.rating || 0
-                  )
+                  Number(item.rating || 0)
                 )
               );
 
               return (
                 <View
                   key={item.id}
-                  style={
-                    styles.reviewCard
-                  }
+                  style={styles.reviewCard}
                 >
 
-                  <Text
-                    style={styles.stars}
-                  >
-                    {"★".repeat(
-                      rating
-                    )}
-                    {"☆".repeat(
-                      5 - rating
-                    )}
+                  <Text style={styles.stars}>
+                    {"★".repeat(rating)}
+                    {"☆".repeat(5 - rating)}
                   </Text>
 
                   <Text
-                    style={
-                      styles.reviewText
-                    }
+                    style={styles.reviewText}
                   >
                     "{item.review}"
                   </Text>
 
-                  <Text
-                    style={
-                      styles.reviewer
-                    }
-                  >
+                  <Text style={styles.reviewer}>
                     — {item.name}
                   </Text>
 
@@ -819,19 +731,13 @@ export default function HomeScreen() {
 
         {/* CONTACT */}
 
-        <View
-          style={styles.contactSection}
-        >
+        <View style={styles.contactSection}>
 
-          <Text
-            style={styles.bottomTitle}
-          >
+          <Text style={styles.bottomTitle}>
             Contact Us
           </Text>
 
-          <Text
-            style={styles.contactText}
-          >
+          <Text style={styles.contactText}>
             Have a question about a bike?
           </Text>
 
@@ -841,9 +747,7 @@ export default function HomeScreen() {
           >
 
             <Text
-              style={
-                styles.contactButtonText
-              }
+              style={styles.contactButtonText}
             >
               📞 Call Us
             </Text>
@@ -851,27 +755,21 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={
-              styles.contactWhatsapp
-            }
+            style={styles.contactWhatsapp}
             onPress={() =>
               whatsapp("a bike")
             }
           >
 
             <Text
-              style={
-                styles.contactButtonText
-              }
+              style={styles.contactButtonText}
             >
               💬 WhatsApp Us
             </Text>
 
           </TouchableOpacity>
 
-          <Text
-            style={styles.contactNumber}
-          >
+          <Text style={styles.contactNumber}>
             +91 63018 85817
           </Text>
 
@@ -881,77 +779,55 @@ export default function HomeScreen() {
 
         <View style={styles.footer}>
 
-          <Text
-            style={styles.footerLogo}
-          >
+          <Text style={styles.footerLogo}>
             🏍️ BikesLand
           </Text>
 
-          <Text
-            style={styles.footerText}
-          >
+          <Text style={styles.footerText}>
             BUY • SELL • TRUST
           </Text>
 
-          <View
-            style={styles.footerLinks}
-          >
+          <View style={styles.footerLinks}>
 
             <TouchableOpacity>
-              <Text
-                style={styles.footerLink}
-              >
+              <Text style={styles.footerLink}>
                 About
               </Text>
             </TouchableOpacity>
 
-            <Text
-              style={styles.footerDot}
-            >
+            <Text style={styles.footerDot}>
               •
             </Text>
 
             <TouchableOpacity>
-              <Text
-                style={styles.footerLink}
-              >
+              <Text style={styles.footerLink}>
                 Reviews
               </Text>
             </TouchableOpacity>
 
-            <Text
-              style={styles.footerDot}
-            >
+            <Text style={styles.footerDot}>
               •
             </Text>
 
             <TouchableOpacity
               onPress={callNow}
             >
-              <Text
-                style={styles.footerLink}
-              >
+              <Text style={styles.footerLink}>
                 Contact
               </Text>
             </TouchableOpacity>
 
           </View>
 
-          <Text
-            style={styles.footerPhone}
-          >
+          <Text style={styles.footerPhone}>
             📞 +91 6301885817
           </Text>
 
-          <Text
-            style={styles.copyright}
-          >
+          <Text style={styles.copyright}>
             © 2026 BikesLand
           </Text>
 
-          <Text
-            style={styles.founded}
-          >
+          <Text style={styles.founded}>
             Founded by Kandhukuru
             Bhupathi Santosh
           </Text>
@@ -971,21 +847,24 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    height: 105,
-    paddingTop: 40,
+    height: 95,
+    paddingTop: 55,
     paddingBottom: 8,
     alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#222",
-    backgroundColor: "#000",
+    backgroundColor: "#000000",
     position: "relative",
     zIndex: 10,
   },
 
-  logo: {
-    width: 150,
-    height: 43,
-  },
+ logo: {
+  width: 150,
+  height: 43,
+  position: "absolute",
+  left: 18,
+  top: 48,
+},
 
   tagline: {
     color: "#777",
@@ -994,24 +873,19 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  settingsButton: {
-    position: "absolute",
-    right: 18,
-    top: 51,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#292929",
-    borderWidth: 3,
-    borderColor: "#151515",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  /* =========================
+     NOTIFICATION BELL
+  ========================= */
 
-  settingsIcon: {
-    color: "#999",
-    fontSize: 22,
-  },
+  notificationButton: {
+  position: "absolute",
+  right: 18,
+  top: 65,
+},
+
+notificationIcon: {
+  fontSize: 18,
+},
 
   contentScroll: {
     flex: 1,
