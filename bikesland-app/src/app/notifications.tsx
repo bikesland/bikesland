@@ -11,8 +11,6 @@ import { useRouter } from "expo-router";
 import {
   collection,
   getDocs,
-  orderBy,
-  query,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 
@@ -27,66 +25,141 @@ type NotificationItem = {
 export default function NotificationsScreen() {
   const router = useRouter();
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>(
-    []
-  );
+  const [notifications, setNotifications] = useState<
+    NotificationItem[]
+  >([]);
+
   const [loading, setLoading] = useState(true);
 
+  // =========================
+  // LOAD NOTIFICATIONS
+  // =========================
   const loadNotifications = async () => {
     try {
       setLoading(true);
 
-      const notificationsQuery = query(
-        collection(db, "notifications"),
-        orderBy("createdAt", "desc")
+      console.log("🔔 Loading BikesLand notifications...");
+
+      const snapshot = await getDocs(
+        collection(db, "notifications")
       );
 
-      const snapshot = await getDocs(notificationsQuery);
+      console.log(
+        "🔔 Notifications found:",
+        snapshot.docs.length
+      );
 
-      const data: NotificationItem[] = snapshot.docs.map((doc) => {
-        const item = doc.data();
+      const data: NotificationItem[] =
+        snapshot.docs.map((item) => {
+          const notification = item.data();
 
-        return {
-          id: doc.id,
-          title: String(item.title || "BikesLand"),
-          message: String(
-            item.message || item.description || ""
-          ),
-          type: String(item.type || "general"),
-          createdAt: item.createdAt,
-        };
+          return {
+            id: item.id,
+
+            title: String(
+              notification.title ||
+                "BikesLand"
+            ),
+
+            message: String(
+              notification.message ||
+                notification.description ||
+                ""
+            ),
+
+            type: String(
+              notification.type ||
+                "general"
+            ),
+
+            createdAt:
+              notification.createdAt,
+          };
+        });
+
+      // =========================
+      // SORT NEWEST FIRST
+      // =========================
+      data.sort((a, b) => {
+        try {
+          const timeA =
+            a.createdAt?.toMillis?.() || 0;
+
+          const timeB =
+            b.createdAt?.toMillis?.() || 0;
+
+          return timeB - timeA;
+        } catch {
+          return 0;
+        }
       });
 
       setNotifications(data);
     } catch (error) {
-      console.log("Notifications Error:", error);
+      console.log(
+        "❌ Notifications Error:",
+        error
+      );
+
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================
+  // LOAD WHEN SCREEN OPENS
+  // =========================
   useEffect(() => {
     loadNotifications();
   }, []);
 
+  // =========================
+  // ICON
+  // =========================
   const getIcon = (type: string) => {
-    if (type === "bike") return "🏍️";
-    if (type === "price") return "💰";
-    if (type === "offer") return "🔥";
-    return "🔔";
+    switch (type) {
+      case "bike":
+        return "🏍️";
+
+      case "price":
+        return "💰";
+
+      case "offer":
+        return "🔥";
+
+      default:
+        return "🔔";
+    }
   };
 
+  // =========================
+  // DATE
+  // =========================
   const getTime = (createdAt: any) => {
-    if (!createdAt) return "Recently";
+    if (!createdAt) {
+      return "Recently";
+    }
 
     try {
-      const date = createdAt.toDate();
+      if (
+        typeof createdAt.toDate ===
+        "function"
+      ) {
+        const date =
+          createdAt.toDate();
 
-      return date.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+        return date.toLocaleDateString(
+          "en-IN",
+          {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }
+        );
+      }
+
+      return "Recently";
     } catch {
       return "Recently";
     }
@@ -95,15 +168,22 @@ export default function NotificationsScreen() {
   return (
     <View style={styles.container}>
 
-      {/* HEADER */}
+      {/* =========================
+          HEADER
+      ========================= */}
 
       <View style={styles.header}>
 
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() =>
+            router.back()
+          }
+          activeOpacity={0.7}
         >
-          <Text style={styles.backText}>‹</Text>
+          <Text style={styles.backText}>
+            ‹
+          </Text>
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>
@@ -112,45 +192,75 @@ export default function NotificationsScreen() {
 
       </View>
 
-      {/* CONTENT */}
+      {/* =========================
+          CONTENT
+      ========================= */}
 
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
       >
 
+        {/* LOADING */}
+
         {loading ? (
 
           <View style={styles.center}>
+
             <ActivityIndicator
               size="large"
               color="#e50914"
             />
 
-            <Text style={styles.loadingText}>
+            <Text
+              style={styles.loadingText}
+            >
               Loading notifications...
             </Text>
+
           </View>
 
         ) : notifications.length === 0 ? (
 
+          /* EMPTY */
+
           <View style={styles.empty}>
 
-            <Text style={styles.emptyIcon}>
+            <Text
+              style={styles.emptyIcon}
+            >
               🔔
             </Text>
 
-            <Text style={styles.emptyTitle}>
+            <Text
+              style={styles.emptyTitle}
+            >
               No Notifications
             </Text>
 
-            <Text style={styles.emptyText}>
-              New BikesLand updates will appear here.
+            <Text
+              style={styles.emptyText}
+            >
+              New BikesLand bikes and
+              updates will appear here.
             </Text>
+
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={loadNotifications}
+            >
+              <Text
+                style={styles.refreshText}
+              >
+                🔄 Refresh
+              </Text>
+            </TouchableOpacity>
 
           </View>
 
         ) : (
+
+          /* NOTIFICATIONS */
 
           notifications.map((item) => (
 
@@ -159,26 +269,44 @@ export default function NotificationsScreen() {
               style={styles.card}
             >
 
-              <View style={styles.iconCircle}>
+              {/* ICON */}
 
-                <Text style={styles.icon}>
+              <View
+                style={styles.iconCircle}
+              >
+
+                <Text
+                  style={styles.icon}
+                >
                   {getIcon(item.type)}
                 </Text>
 
               </View>
 
-              <View style={styles.cardContent}>
+              {/* CONTENT */}
 
-                <Text style={styles.title}>
+              <View
+                style={styles.cardContent}
+              >
+
+                <Text
+                  style={styles.title}
+                >
                   {item.title}
                 </Text>
 
-                <Text style={styles.message}>
+                <Text
+                  style={styles.message}
+                >
                   {item.message}
                 </Text>
 
-                <Text style={styles.time}>
-                  {getTime(item.createdAt)}
+                <Text
+                  style={styles.time}
+                >
+                  {getTime(
+                    item.createdAt
+                  )}
                 </Text>
 
               </View>
@@ -189,7 +317,9 @@ export default function NotificationsScreen() {
 
         )}
 
-        <View style={{ height: 30 }} />
+        <View
+          style={{ height: 40 }}
+        />
 
       </ScrollView>
 
@@ -198,6 +328,7 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: "#000",
@@ -228,6 +359,7 @@ const styles = StyleSheet.create({
   backText: {
     color: "#fff",
     fontSize: 30,
+    lineHeight: 34,
   },
 
   headerTitle: {
@@ -328,4 +460,19 @@ const styles = StyleSheet.create({
     marginTop: 7,
     lineHeight: 17,
   },
+
+  refreshButton: {
+    marginTop: 18,
+    backgroundColor: "#e50914",
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+
+  refreshText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
 });

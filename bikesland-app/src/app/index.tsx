@@ -3,6 +3,7 @@ import {
   Dimensions,
   Image,
   Linking,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -51,13 +52,67 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [firebaseError, setFirebaseError] = useState("");
 
+  /* =========================
+     FILTER STATES
+  ========================= */
+
+  const [filterVisible, setFilterVisible] = useState(false);
+
+  const [selectedBrand, setSelectedBrand] = useState("All");
+  const [selectedYear, setSelectedYear] = useState("All");
+  const [selectedPrice, setSelectedPrice] = useState("All");
+
+  const [tempBrand, setTempBrand] = useState("All");
+  const [tempYear, setTempYear] = useState("All");
+  const [tempPrice, setTempPrice] = useState("All");
+
+  const brandOptions = [
+    "All",
+    "Royal Enfield",
+    "Yamaha",
+    "Honda",
+    "KTM",
+    "TVS",
+    "Bajaj",
+    "Suzuki",
+    "Hero",
+  ];
+
+  const yearOptions = [
+    "All",
+    "2026",
+    "2025",
+    "2024",
+    "2023",
+    "2022",
+    "2021",
+    "2020",
+    "2019",
+    "2018",
+  ];
+
+  const priceOptions = [
+    "All",
+    "Under ₹50K",
+    "₹50K - ₹1L",
+    "₹1L - ₹1.5L",
+    "₹1.5L - ₹2L",
+    "Above ₹2L",
+  ];
+
+  /* =========================
+     REVIEW STATES
+  ========================= */
+
   const [reviewName, setReviewName] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  /* LOAD REVIEWS */
+  /* =========================
+     LOAD REVIEWS
+  ========================= */
 
   const loadReviews = async () => {
     try {
@@ -87,7 +142,9 @@ export default function HomeScreen() {
     }
   };
 
-  /* LOAD BIKES */
+  /* =========================
+     LOAD BIKES
+  ========================= */
 
   useEffect(() => {
     const loadBikes = async () => {
@@ -185,7 +242,9 @@ export default function HomeScreen() {
     loadReviews();
   }, []);
 
-  /* CALL */
+  /* =========================
+     CALL
+  ========================= */
 
   const callNow = () => {
     Linking.openURL(
@@ -193,7 +252,9 @@ export default function HomeScreen() {
     );
   };
 
-  /* WHATSAPP */
+  /* =========================
+     WHATSAPP
+  ========================= */
 
   const whatsapp = (bikeName: string) => {
     const message =
@@ -206,7 +267,9 @@ export default function HomeScreen() {
     );
   };
 
-  /* SUBMIT REVIEW */
+  /* =========================
+     SUBMIT REVIEW
+  ========================= */
 
   const submitReview = async () => {
     if (!reviewName.trim()) {
@@ -260,16 +323,102 @@ export default function HomeScreen() {
     }
   };
 
-  /* SEARCH */
+  /* =========================
+     FILTER FUNCTIONS
+  ========================= */
 
-  const filteredBikes = bikes.filter(
-    (bike) =>
+  const getPriceNumber = (price: string) => {
+    const cleaned = price
+      .replace(/₹/g, "")
+      .replace(/,/g, "")
+      .replace(/[^\d.]/g, "");
+
+    const value = Number(cleaned);
+
+    return Number.isNaN(value) ? 0 : value;
+  };
+
+  const matchesPrice = (price: string) => {
+    const value = getPriceNumber(price);
+
+    switch (selectedPrice) {
+      case "Under ₹50K":
+        return value < 50000;
+
+      case "₹50K - ₹1L":
+        return value >= 50000 && value <= 100000;
+
+      case "₹1L - ₹1.5L":
+        return value > 100000 && value <= 150000;
+
+      case "₹1.5L - ₹2L":
+        return value > 150000 && value <= 200000;
+
+      case "Above ₹2L":
+        return value > 200000;
+
+      default:
+        return true;
+    }
+  };
+
+  const filteredBikes = bikes.filter((bike) => {
+    const searchMatch = bike.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const brandMatch =
+      selectedBrand === "All" ||
       bike.name
         .toLowerCase()
         .includes(
-          search.toLowerCase()
-        )
-  );
+          selectedBrand.toLowerCase()
+        );
+
+    const yearMatch =
+      selectedYear === "All" ||
+      bike.year === selectedYear;
+
+    const priceMatch =
+      matchesPrice(bike.price);
+
+    return (
+      searchMatch &&
+      brandMatch &&
+      yearMatch &&
+      priceMatch
+    );
+  });
+
+  const openFilters = () => {
+    setTempBrand(selectedBrand);
+    setTempYear(selectedYear);
+    setTempPrice(selectedPrice);
+    setFilterVisible(true);
+  };
+
+  const applyFilters = () => {
+    setSelectedBrand(tempBrand);
+    setSelectedYear(tempYear);
+    setSelectedPrice(tempPrice);
+    setFilterVisible(false);
+  };
+
+  const clearFilters = () => {
+    setTempBrand("All");
+    setTempYear("All");
+    setTempPrice("All");
+
+    setSelectedBrand("All");
+    setSelectedYear("All");
+    setSelectedPrice("All");
+
+    setFilterVisible(false);
+  };
+
+  /* =========================
+     RETURN
+  ========================= */
 
   return (
     <View style={styles.container}>
@@ -288,16 +437,19 @@ export default function HomeScreen() {
           resizeMode="contain"
         />
 
-        
         {/* NOTIFICATION BELL */}
 
         <TouchableOpacity
-  style={styles.notificationButton}
-  onPress={() => router.push("/notifications")}
-  activeOpacity={0.7}
->
-  <Text style={styles.notificationIcon}>🔔</Text>
-</TouchableOpacity>
+          style={styles.notificationButton}
+          onPress={() =>
+            router.push("/notifications")
+          }
+          activeOpacity={0.7}
+        >
+          <Text style={styles.notificationIcon}>
+            🔔
+          </Text>
+        </TouchableOpacity>
 
       </View>
 
@@ -324,6 +476,8 @@ export default function HomeScreen() {
             {"\n"}
             with BikesLand
           </Text>
+
+          {/* SEARCH */}
 
           <View style={styles.searchBox}>
 
@@ -381,11 +535,230 @@ export default function HomeScreen() {
 
         </View>
 
-        {/* AVAILABLE BIKES */}
+        {/* =========================
+            AVAILABLE BIKES HEADER
+        ========================= */}
 
-        <Text style={styles.sectionTitle}>
-          Available Bikes
-        </Text>
+        <View style={styles.availableHeader}>
+
+          <Text style={styles.sectionTitle}>
+            Available Bikes
+          </Text>
+
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={openFilters}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.filterButtonText}>
+              ⚙ Filter
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+
+        {/* =========================
+            FILTER MODAL
+        ========================= */}
+
+        <Modal
+          visible={filterVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() =>
+            setFilterVisible(false)
+          }
+        >
+
+          <View style={styles.modalOverlay}>
+
+            <View style={styles.filterModal}>
+
+              {/* FILTER HEADER */}
+
+              <View style={styles.filterHeader}>
+
+                <Text style={styles.filterTitle}>
+                  Filter Bikes
+                </Text>
+
+                <TouchableOpacity
+                  onPress={() =>
+                    setFilterVisible(false)
+                  }
+                >
+                  <Text style={styles.closeButton}>
+                    ✕
+                  </Text>
+                </TouchableOpacity>
+
+              </View>
+
+              {/* BRAND */}
+
+              <Text style={styles.filterLabel}>
+                🏍️ Brand
+              </Text>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.optionScroll}
+              >
+
+                {brandOptions.map(
+                  (brand) => (
+
+                    <TouchableOpacity
+                      key={brand}
+                      style={[
+                        styles.optionButton,
+                        tempBrand === brand &&
+                          styles.optionButtonActive,
+                      ]}
+                      onPress={() =>
+                        setTempBrand(brand)
+                      }
+                    >
+
+                      <Text
+                        style={[
+                          styles.optionText,
+                          tempBrand === brand &&
+                            styles.optionTextActive,
+                        ]}
+                      >
+                        {brand}
+                      </Text>
+
+                    </TouchableOpacity>
+
+                  )
+                )}
+
+              </ScrollView>
+
+              {/* YEAR */}
+
+              <Text style={styles.filterLabel}>
+                📅 Year
+              </Text>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.optionScroll}
+              >
+
+                {yearOptions.map(
+                  (year) => (
+
+                    <TouchableOpacity
+                      key={year}
+                      style={[
+                        styles.optionButton,
+                        tempYear === year &&
+                          styles.optionButtonActive,
+                      ]}
+                      onPress={() =>
+                        setTempYear(year)
+                      }
+                    >
+
+                      <Text
+                        style={[
+                          styles.optionText,
+                          tempYear === year &&
+                            styles.optionTextActive,
+                        ]}
+                      >
+                        {year}
+                      </Text>
+
+                    </TouchableOpacity>
+
+                  )
+                )}
+
+              </ScrollView>
+
+              {/* PRICE */}
+
+              <Text style={styles.filterLabel}>
+                💰 Price Range
+              </Text>
+
+              <View style={styles.priceOptions}>
+
+                {priceOptions.map(
+                  (price) => (
+
+                    <TouchableOpacity
+                      key={price}
+                      style={[
+                        styles.priceOption,
+                        tempPrice === price &&
+                          styles.optionButtonActive,
+                      ]}
+                      onPress={() =>
+                        setTempPrice(price)
+                      }
+                    >
+
+                      <Text
+                        style={[
+                          styles.optionText,
+                          tempPrice === price &&
+                            styles.optionTextActive,
+                        ]}
+                      >
+                        {price}
+                      </Text>
+
+                    </TouchableOpacity>
+
+                  )
+                )}
+
+              </View>
+
+              {/* ACTION BUTTONS */}
+
+              <View style={styles.filterActions}>
+
+                <TouchableOpacity
+                  style={styles.clearFilterButton}
+                  onPress={clearFilters}
+                >
+                  <Text
+                    style={styles.clearFilterText}
+                  >
+                    Clear All
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.applyFilterButton}
+                  onPress={applyFilters}
+                >
+                  <Text
+                    style={styles.applyFilterText}
+                  >
+                    Apply Filters
+                  </Text>
+                </TouchableOpacity>
+
+              </View>
+
+            </View>
+
+          </View>
+
+        </Modal>
+
+        {/* =========================
+            BIKES
+        ========================= */}
 
         <View style={styles.bikesContainer}>
 
@@ -404,170 +777,210 @@ export default function HomeScreen() {
           ) : filteredBikes.length === 0 ? (
 
             <Text style={styles.message}>
-              {search
+              {search ||
+              selectedBrand !== "All" ||
+              selectedYear !== "All" ||
+              selectedPrice !== "All"
                 ? "No bikes found"
                 : "No bikes available"}
             </Text>
 
           ) : (
 
-            filteredBikes.map((bike) => (
+            filteredBikes.map(
+              (bike) => (
 
-              <View
-                key={bike.id}
-                style={styles.card}
-              >
+                <View
+                  key={bike.id}
+                  style={styles.card}
+                >
 
-                {bike.images &&
-                bike.images.length > 0 ? (
+                  {/* BIKE IMAGES */}
 
-                  <ScrollView
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    nestedScrollEnabled
-                  >
+                  {bike.images &&
+                  bike.images.length > 0 ? (
 
-                    {bike.images.map(
-                      (image, index) => (
+                    <ScrollView
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      nestedScrollEnabled
+                    >
 
-                        <View
-                          key={`${bike.id}-${index}`}
-                          style={styles.photoContainer}
-                        >
-
-                          <Image
-                            source={{
-                              uri: image,
-                            }}
-                            style={styles.bikeImage}
-                            resizeMode="cover"
-                          />
+                      {bike.images.map(
+                        (image, index) => (
 
                           <View
-                            style={styles.counter}
+                            key={`${bike.id}-${index}`}
+                            style={
+                              styles.photoContainer
+                            }
                           >
 
-                            <Text
-                              style={styles.counterText}
+                            <Image
+                              source={{
+                                uri: image,
+                              }}
+                              style={
+                                styles.bikeImage
+                              }
+                              resizeMode="cover"
+                            />
+
+                            <View
+                              style={
+                                styles.counter
+                              }
                             >
-                              {index + 1} /{" "}
-                              {bike.images?.length || 1}
-                            </Text>
+
+                              <Text
+                                style={
+                                  styles.counterText
+                                }
+                              >
+                                {index + 1} /{" "}
+                                {bike.images
+                                  ?.length || 1}
+                              </Text>
+
+                            </View>
 
                           </View>
 
-                        </View>
+                        )
+                      )}
 
-                      )
-                    )}
+                    </ScrollView>
 
-                  </ScrollView>
+                  ) : (
 
-                ) : (
+                    <View
+                      style={styles.noImage}
+                    >
 
-                  <View style={styles.noImage}>
+                      <Text
+                        style={
+                          styles.noImageText
+                        }
+                      >
+                        Bike Image
+                      </Text>
+
+                    </View>
+
+                  )}
+
+                  {/* CARD CONTENT */}
+
+                  <View
+                    style={styles.cardContent}
+                  >
 
                     <Text
-                      style={styles.noImageText}
+                      style={styles.bikeName}
                     >
-                      Bike Image
+                      {bike.name}
                     </Text>
 
-                  </View>
+                    <Text style={styles.info}>
+                      📅 Year: {bike.year}
+                    </Text>
 
-                )}
+                    <Text style={styles.info}>
+                      📍 {bike.location}
+                    </Text>
 
-                <View
-                  style={styles.cardContent}
-                >
+                    <Text style={styles.info}>
+                      🛣 KM Driven: {bike.km}
+                    </Text>
 
-                  <Text
-                    style={styles.bikeName}
-                  >
-                    {bike.name}
-                  </Text>
+                    <Text style={styles.price}>
+                      {bike.price}
+                    </Text>
 
-                  <Text style={styles.info}>
-                    📅 Year: {bike.year}
-                  </Text>
+                    {/* BUTTONS */}
 
-                  <Text style={styles.info}>
-                    📍 {bike.location}
-                  </Text>
+                    <View style={styles.buttons}>
 
-                  <Text style={styles.info}>
-                    🛣 KM Driven: {bike.km}
-                  </Text>
-
-                  <Text style={styles.price}>
-                    {bike.price}
-                  </Text>
-
-                  <View style={styles.buttons}>
-
-                    <TouchableOpacity
-                      style={styles.viewButton}
-                      onPress={() =>
-                        router.push({
-                          pathname:
-                            "/view-details/[id]",
-                          params: {
-                            id: bike.id,
-                          },
-                        })
-                      }
-                    >
-
-                      <Text
-                        style={styles.buttonText}
+                      <TouchableOpacity
+                        style={
+                          styles.viewButton
+                        }
+                        onPress={() =>
+                          router.push({
+                            pathname:
+                              "/view-details/[id]",
+                            params: {
+                              id: bike.id,
+                            },
+                          })
+                        }
                       >
-                        View Details
-                      </Text>
 
-                    </TouchableOpacity>
+                        <Text
+                          style={
+                            styles.buttonText
+                          }
+                        >
+                          View Details
+                        </Text>
 
-                    <TouchableOpacity
-                      style={styles.callButton}
-                      onPress={callNow}
-                    >
+                      </TouchableOpacity>
 
-                      <Text
-                        style={styles.buttonText}
+                      <TouchableOpacity
+                        style={
+                          styles.callButton
+                        }
+                        onPress={callNow}
                       >
-                        Call
-                      </Text>
 
-                    </TouchableOpacity>
+                        <Text
+                          style={
+                            styles.buttonText
+                          }
+                        >
+                          Call
+                        </Text>
 
-                    <TouchableOpacity
-                      style={styles.whatsappButton}
-                      onPress={() =>
-                        whatsapp(bike.name)
-                      }
-                    >
+                      </TouchableOpacity>
 
-                      <Text
-                        style={styles.buttonText}
+                      <TouchableOpacity
+                        style={
+                          styles.whatsappButton
+                        }
+                        onPress={() =>
+                          whatsapp(
+                            bike.name
+                          )
+                        }
                       >
-                        WhatsApp
-                      </Text>
 
-                    </TouchableOpacity>
+                        <Text
+                          style={
+                            styles.buttonText
+                          }
+                        >
+                          WhatsApp
+                        </Text>
+
+                      </TouchableOpacity>
+
+                    </View>
 
                   </View>
 
                 </View>
 
-              </View>
-
-            ))
+              )
+            )
 
           )}
 
         </View>
 
-        {/* ABOUT */}
+        {/* =========================
+            ABOUT
+        ========================= */}
 
         <View style={styles.aboutSection}>
 
@@ -590,13 +1003,17 @@ export default function HomeScreen() {
 
         </View>
 
-        {/* REVIEWS */}
+        {/* =========================
+            REVIEWS
+        ========================= */}
 
         <View style={styles.reviewsSection}>
 
           <Text style={styles.bottomTitle}>
             Customer Reviews
           </Text>
+
+          {/* REVIEW FORM */}
 
           <View style={styles.reviewForm}>
 
@@ -633,7 +1050,8 @@ export default function HomeScreen() {
                         styles.ratingStar,
                         {
                           color:
-                            star <= reviewRating
+                            star <=
+                            reviewRating
                               ? "#ffd400"
                               : "#555",
                         },
@@ -664,13 +1082,17 @@ export default function HomeScreen() {
             />
 
             <TouchableOpacity
-              style={styles.submitReviewButton}
+              style={
+                styles.submitReviewButton
+              }
               onPress={submitReview}
               disabled={reviewLoading}
             >
 
               <Text
-                style={styles.submitReviewText}
+                style={
+                  styles.submitReviewText
+                }
               >
                 {reviewLoading
                   ? "Submitting..."
@@ -680,6 +1102,8 @@ export default function HomeScreen() {
             </TouchableOpacity>
 
           </View>
+
+          {/* REVIEWS LIST */}
 
           {reviews.length === 0 ? (
 
@@ -696,28 +1120,40 @@ export default function HomeScreen() {
                 5,
                 Math.max(
                   0,
-                  Number(item.rating || 0)
+                  Number(
+                    item.rating || 0
+                  )
                 )
               );
 
               return (
                 <View
                   key={item.id}
-                  style={styles.reviewCard}
+                  style={
+                    styles.reviewCard
+                  }
                 >
 
-                  <Text style={styles.stars}>
+                  <Text
+                    style={styles.stars}
+                  >
                     {"★".repeat(rating)}
-                    {"☆".repeat(5 - rating)}
+                    {"☆".repeat(
+                      5 - rating
+                    )}
                   </Text>
 
                   <Text
-                    style={styles.reviewText}
+                    style={
+                      styles.reviewText
+                    }
                   >
                     "{item.review}"
                   </Text>
 
-                  <Text style={styles.reviewer}>
+                  <Text
+                    style={styles.reviewer}
+                  >
                     — {item.name}
                   </Text>
 
@@ -729,9 +1165,13 @@ export default function HomeScreen() {
 
         </View>
 
-        {/* CONTACT */}
+        {/* =========================
+            CONTACT
+        ========================= */}
 
-        <View style={styles.contactSection}>
+        <View
+          style={styles.contactSection}
+        >
 
           <Text style={styles.bottomTitle}>
             Contact Us
@@ -747,7 +1187,9 @@ export default function HomeScreen() {
           >
 
             <Text
-              style={styles.contactButtonText}
+              style={
+                styles.contactButtonText
+              }
             >
               📞 Call Us
             </Text>
@@ -755,27 +1197,35 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.contactWhatsapp}
+            style={
+              styles.contactWhatsapp
+            }
             onPress={() =>
               whatsapp("a bike")
             }
           >
 
             <Text
-              style={styles.contactButtonText}
+              style={
+                styles.contactButtonText
+              }
             >
               💬 WhatsApp Us
             </Text>
 
           </TouchableOpacity>
 
-          <Text style={styles.contactNumber}>
+          <Text
+            style={styles.contactNumber}
+          >
             +91 63018 85817
           </Text>
 
         </View>
 
-        {/* FOOTER */}
+        {/* =========================
+            FOOTER
+        ========================= */}
 
         <View style={styles.footer}>
 
@@ -790,7 +1240,9 @@ export default function HomeScreen() {
           <View style={styles.footerLinks}>
 
             <TouchableOpacity>
-              <Text style={styles.footerLink}>
+              <Text
+                style={styles.footerLink}
+              >
                 About
               </Text>
             </TouchableOpacity>
@@ -800,7 +1252,9 @@ export default function HomeScreen() {
             </Text>
 
             <TouchableOpacity>
-              <Text style={styles.footerLink}>
+              <Text
+                style={styles.footerLink}
+              >
                 Reviews
               </Text>
             </TouchableOpacity>
@@ -812,22 +1266,30 @@ export default function HomeScreen() {
             <TouchableOpacity
               onPress={callNow}
             >
-              <Text style={styles.footerLink}>
+              <Text
+                style={styles.footerLink}
+              >
                 Contact
               </Text>
             </TouchableOpacity>
 
           </View>
 
-          <Text style={styles.footerPhone}>
+          <Text
+            style={styles.footerPhone}
+          >
             📞 +91 6301885817
           </Text>
 
-          <Text style={styles.copyright}>
+          <Text
+            style={styles.copyright}
+          >
             © 2026 BikesLand
           </Text>
 
-          <Text style={styles.founded}>
+          <Text
+            style={styles.founded}
+          >
             Founded by Kandhukuru
             Bhupathi Santosh
           </Text>
@@ -839,6 +1301,10 @@ export default function HomeScreen() {
     </View>
   );
 }
+
+/* =========================
+   STYLES
+========================= */
 
 const styles = StyleSheet.create({
   container: {
@@ -858,13 +1324,13 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 
- logo: {
-  width: 150,
-  height: 43,
-  position: "absolute",
-  left: 18,
-  top: 48,
-},
+  logo: {
+    width: 150,
+    height: 43,
+    position: "absolute",
+    left: 18,
+    top: 48,
+  },
 
   tagline: {
     color: "#777",
@@ -873,23 +1339,23 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  /* =========================
-     NOTIFICATION BELL
-  ========================= */
+  /* NOTIFICATION */
 
   notificationButton: {
-  position: "absolute",
-  right: 18,
-  top: 65,
-},
+    position: "absolute",
+    right: 18,
+    top: 65,
+  },
 
-notificationIcon: {
-  fontSize: 18,
-},
+  notificationIcon: {
+    fontSize: 18,
+  },
 
   contentScroll: {
     flex: 1,
   },
+
+  /* HERO */
 
   hero: {
     alignItems: "center",
@@ -912,6 +1378,8 @@ notificationIcon: {
     textAlign: "center",
     lineHeight: 14,
   },
+
+  /* SEARCH */
 
   searchBox: {
     width: "100%",
@@ -944,6 +1412,8 @@ notificationIcon: {
     fontSize: 14,
     fontWeight: "800",
   },
+
+  /* FOUNDER */
 
   founderSection: {
     flexDirection: "row",
@@ -997,13 +1467,166 @@ notificationIcon: {
     marginTop: 4,
   },
 
+  /* AVAILABLE BIKES */
+
+  availableHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+
   sectionTitle: {
     color: "#fff",
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "800",
-    textAlign: "center",
-    marginVertical: 18,
   },
+
+  filterButton: {
+  backgroundColor: "#1a1a1a",
+  paddingHorizontal: 15,
+  paddingVertical: 9,
+  borderRadius: 9,
+  borderWidth: 1,
+  borderColor: "#444",
+},
+
+  filterButtonText: {
+    color: "#f6fafa",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  /* FILTER MODAL */
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    justifyContent: "flex-end",
+  },
+
+  filterModal: {
+    backgroundColor: "#111827",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 30,
+    borderWidth: 1,
+    borderColor: "#292929",
+  },
+
+  filterHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+
+  filterTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "900",
+  },
+
+  closeButton: {
+    color: "#aaa",
+    fontSize: 22,
+    fontWeight: "700",
+  },
+
+  filterLabel: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 8,
+    marginBottom: 10,
+  },
+
+  optionScroll: {
+    marginBottom: 10,
+  },
+
+  optionButton: {
+    backgroundColor: "#222",
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+
+  optionButtonActive: {
+    backgroundColor: "#e50914",
+    borderColor: "#e50914",
+  },
+
+  optionText: {
+    color: "#aaa",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  optionTextActive: {
+    color: "#fff",
+    fontWeight: "900",
+  },
+
+  priceOptions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 18,
+  },
+
+  priceOption: {
+    backgroundColor: "#222",
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+
+  filterActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 8,
+  },
+
+  clearFilterButton: {
+    flex: 1,
+    backgroundColor: "#222",
+    paddingVertical: 13,
+    borderRadius: 9,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#444",
+  },
+
+  clearFilterText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  applyFilterButton: {
+    flex: 1.5,
+    backgroundColor: "#e50914",
+    paddingVertical: 13,
+    borderRadius: 9,
+    alignItems: "center",
+  },
+
+  applyFilterText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+
+  /* BIKES */
 
   bikesContainer: {
     paddingHorizontal: 16,
@@ -1035,8 +1658,7 @@ notificationIcon: {
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor:
-      "rgba(0,0,0,0.75)",
+    backgroundColor: "rgba(0,0,0,0.75)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 15,
@@ -1108,6 +1730,20 @@ notificationIcon: {
     fontWeight: "800",
   },
 
+  noImage: {
+    height: 220,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#111",
+  },
+
+  noImageText: {
+    color: "#777",
+    fontSize: 13,
+  },
+
+  /* ABOUT */
+
   aboutSection: {
     marginHorizontal: 16,
     marginTop: 10,
@@ -1138,6 +1774,8 @@ notificationIcon: {
     fontWeight: "700",
     marginTop: 12,
   },
+
+  /* REVIEWS */
 
   reviewsSection: {
     marginHorizontal: 16,
@@ -1239,6 +1877,8 @@ notificationIcon: {
     marginTop: 7,
   },
 
+  /* CONTACT */
+
   contactSection: {
     marginHorizontal: 16,
     marginBottom: 20,
@@ -1284,6 +1924,8 @@ notificationIcon: {
     fontSize: 11,
     marginTop: 10,
   },
+
+  /* FOOTER */
 
   footer: {
     alignItems: "center",
@@ -1343,6 +1985,8 @@ notificationIcon: {
     marginTop: 4,
   },
 
+  /* MESSAGES */
+
   message: {
     color: "#aaa",
     textAlign: "center",
@@ -1353,17 +1997,5 @@ notificationIcon: {
     color: "#ff4444",
     textAlign: "center",
     padding: 18,
-  },
-
-  noImage: {
-    height: 220,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#111",
-  },
-
-  noImageText: {
-    color: "#777",
-    fontSize: 13,
   },
 });

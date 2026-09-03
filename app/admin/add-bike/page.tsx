@@ -1,340 +1,428 @@
-import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+"use client";
 
-import { useRouter } from "expo-router";
-
+import { useState } from "react";
+import { db } from "../../firebase";
 import {
   collection,
-  onSnapshot,
-  orderBy,
-  query,
+  addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 
-import { db } from "../firebase";
+export default function AddBikePage() {
+  const [bikeName, setBikeName] = useState("");
+  const [price, setPrice] = useState("");
+  const [location, setLocation] = useState("");
+  const [year, setYear] = useState("");
+  const [kmDriven, setKmDriven] = useState("");
+  const [description, setDescription] = useState("");
 
-type NotificationItem = {
-  id: string;
-  title?: string;
-  message?: string;
-  type?: string;
-  bikeName?: string;
-  price?: string;
-  location?: string;
-  createdAt?: any;
-};
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [saving, setSaving] = useState(false);
 
-export default function NotificationsScreen() {
-  const router = useRouter();
+  // =========================
+  // CLOUDINARY UPLOAD
+  // =========================
+  const uploadToCloudinary = async (file: File) => {
+    const formData = new FormData();
 
-  const [notifications, setNotifications] = useState<
-    NotificationItem[]
-  >([]);
+    formData.append("file", file);
 
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const notificationsQuery = query(
-      collection(db, "notifications"),
-      orderBy("createdAt", "desc")
+    formData.append(
+      "upload_preset",
+      "bikesland_upload"
     );
 
-    const unsubscribe = onSnapshot(
-      notificationsQuery,
-      (snapshot) => {
-        const data: NotificationItem[] =
-          snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as NotificationItem[];
-
-        setNotifications(data);
-        setLoading(false);
-      },
-      (error) => {
-        console.log(
-          "Notifications error:",
-          error
-        );
-
-        setLoading(false);
+    const response = await fetch(
+      "https://api.cloudinary.com/v1_1/vflu9vv4/image/upload",
+      {
+        method: "POST",
+        body: formData,
       }
     );
 
-    return () => unsubscribe();
-  }, []);
+    const responseText = await response.text();
 
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) {
-      return "";
+    console.log("Cloudinary Status:", response.status);
+    console.log("Cloudinary Response:", responseText);
+
+    if (!response.ok) {
+      throw new Error(
+        `Cloudinary ${response.status}: ${responseText}`
+      );
     }
 
-    try {
-      const date = timestamp.toDate
-        ? timestamp.toDate()
-        : new Date(timestamp);
+    const data = JSON.parse(responseText);
 
-      return date.toLocaleString();
-    } catch {
-      return "";
-    }
+    return data.secure_url as string;
   };
 
-  const renderNotification = ({
-    item,
-  }: {
-    item: NotificationItem;
-  }) => {
-    return (
-      <View style={styles.notificationCard}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.bell}>🔔</Text>
-        </View>
+  // =========================
+  // ADD PHOTOS
+  // =========================
+  const handlePhotoSelect = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newFiles = Array.from(
+      e.target.files || []
+    );
 
-        <View style={styles.notificationContent}>
-          <Text style={styles.notificationTitle}>
-            {item.title || "BikesLand Update"}
-          </Text>
+    if (newFiles.length === 0) {
+      return;
+    }
 
-          <Text style={styles.notificationMessage}>
-            {item.message || ""}
-          </Text>
+    const totalFiles =
+      imageFiles.length + newFiles.length;
 
-          {item.bikeName && (
-            <Text style={styles.bikeInfo}>
-              🏍️ {item.bikeName}
-            </Text>
-          )}
+    if (totalFiles > 6) {
+      alert(
+        `Maximum 6 photos allowed.\n\nAlready selected: ${imageFiles.length}\nYou can add only ${
+          6 - imageFiles.length
+        } more photo${
+          6 - imageFiles.length === 1 ? "" : "s"
+        }.`
+      );
 
-          {item.price && (
-            <Text style={styles.bikeInfo}>
-              💰 ₹{item.price}
-            </Text>
-          )}
+      e.target.value = "";
+      return;
+    }
 
-          {item.location && (
-            <Text style={styles.bikeInfo}>
-              📍 {item.location}
-            </Text>
-          )}
+    setImageFiles((previousFiles) => [
+      ...previousFiles,
+      ...newFiles,
+    ]);
 
-          <Text style={styles.date}>
-            {formatDate(item.createdAt)}
-          </Text>
-        </View>
-      </View>
+    e.target.value = "";
+  };
+
+  // =========================
+  // REMOVE PHOTO
+  // =========================
+  const removePhoto = (index: number) => {
+    setImageFiles((previousFiles) =>
+      previousFiles.filter(
+        (_, photoIndex) => photoIndex !== index
+      )
     );
   };
 
+  // =========================
+  // SAVE BIKE
+  // =========================
+  const handleSave = async () => {
+    if (
+      !bikeName.trim() ||
+      !price.trim() ||
+      !location.trim() ||
+      !year.trim() ||
+      !kmDriven.trim()
+    ) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    if (imageFiles.length === 0) {
+      alert("Please select at least 1 bike photo");
+      return;
+    }
+
+    if (imageFiles.length > 6) {
+      alert("Please select maximum 6 photos");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const imageURLs: string[] = [];
+
+      // =========================
+      // UPLOAD ALL PHOTOS
+      // =========================
+      for (const file of imageFiles) {
+        const imageURL =
+          await uploadToCloudinary(file);
+
+        imageURLs.push(imageURL);
+      }
+
+      // =========================
+      // SAVE BIKE TO FIRESTORE
+      // =========================
+      await addDoc(collection(db, "bikes"), {
+        bikeName: bikeName.trim(),
+        name: bikeName.trim(),
+
+        price: price.trim(),
+        location: location.trim(),
+        year: year.trim(),
+        kmDriven: kmDriven.trim(),
+
+        // First image
+        image: imageURLs[0],
+
+        // All images
+        images: imageURLs,
+
+        description: description.trim(),
+
+        createdAt: serverTimestamp(),
+      });
+
+      // =========================
+      // CREATE APP NOTIFICATION
+      // =========================
+      await addDoc(
+        collection(db, "notifications"),
+        {
+          title: "New Bike Available 🏍️",
+
+          message: `${bikeName.trim()} is now available for ₹${price.trim()} in ${location.trim()}.`,
+
+          type: "bike",
+
+          bikeName: bikeName.trim(),
+          price: price.trim(),
+          location: location.trim(),
+
+          createdAt: serverTimestamp(),
+        }
+      );
+
+      // =========================
+      // SUCCESS
+      // =========================
+      alert(
+        `Bike Added Successfully!\n${imageURLs.length} photos uploaded.\n\nNotification sent to the BikesLand app.`
+      );
+
+      // =========================
+      // RESET FORM
+      // =========================
+      setBikeName("");
+      setPrice("");
+      setLocation("");
+      setYear("");
+      setKmDriven("");
+      setDescription("");
+      setImageFiles([]);
+
+      const fileInput =
+        document.getElementById(
+          "bikePhotos"
+        ) as HTMLInputElement;
+
+      if (fileInput) {
+        fileInput.value = "";
+      }
+    } catch (error) {
+      console.error(
+        "Error adding bike:",
+        error
+      );
+
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Unknown error occurred");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      {/* HEADER */}
+    <main className="min-h-screen bg-black text-white p-6">
 
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.backText}>
-            ‹
-          </Text>
-        </TouchableOpacity>
+      <div className="max-w-xl mx-auto bg-gray-900 p-6 rounded-xl">
 
-        <Text style={styles.headerTitle}>
-          Notifications
-        </Text>
+        <h1 className="text-3xl font-bold text-center mb-6">
+          Add Bike
+        </h1>
 
-        <View style={styles.headerSpace} />
-      </View>
+        <div className="space-y-4">
 
-      {/* CONTENT */}
-
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator
-            size="large"
-            color="#e50914"
+          {/* BIKE NAME */}
+          <input
+            type="text"
+            placeholder="Bike Name"
+            value={bikeName}
+            onChange={(e) =>
+              setBikeName(e.target.value)
+            }
+            className="w-full p-3 rounded bg-gray-800 border border-gray-700"
           />
 
-          <Text style={styles.loadingText}>
-            Loading notifications...
-          </Text>
-        </View>
-      ) : notifications.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyBell}>
-            🔔
-          </Text>
+          {/* PRICE */}
+          <input
+            type="text"
+            placeholder="Price"
+            value={price}
+            onChange={(e) =>
+              setPrice(e.target.value)
+            }
+            className="w-full p-3 rounded bg-gray-800 border border-gray-700"
+          />
 
-          <Text style={styles.emptyTitle}>
-            No Notifications
-          </Text>
+          {/* LOCATION */}
+          <input
+            type="text"
+            placeholder="Location"
+            value={location}
+            onChange={(e) =>
+              setLocation(e.target.value)
+            }
+            className="w-full p-3 rounded bg-gray-800 border border-gray-700"
+          />
 
-          <Text style={styles.emptyText}>
-            New BikesLand updates will appear here.
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item.id}
-          renderItem={renderNotification}
-          contentContainerStyle={
-            styles.listContent
-          }
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-    </View>
+          {/* YEAR */}
+          <input
+            type="number"
+            placeholder="Year"
+            value={year}
+            onChange={(e) =>
+              setYear(e.target.value)
+            }
+            className="w-full p-3 rounded bg-gray-800 border border-gray-700"
+          />
+
+          {/* KM */}
+          <input
+            type="number"
+            placeholder="KM Driven"
+            value={kmDriven}
+            onChange={(e) =>
+              setKmDriven(e.target.value)
+            }
+            className="w-full p-3 rounded bg-gray-800 border border-gray-700"
+          />
+
+          {/* =========================
+              BIKE PHOTOS
+          ========================= */}
+          <div>
+
+            <label className="block mb-2 font-semibold">
+              Bike Photos
+            </label>
+
+            <p className="text-gray-400 text-sm mb-3">
+              Add up to 6 photos. You can add
+              photos one by one.
+            </p>
+
+            {/* SELECT PHOTOS */}
+            {imageFiles.length < 6 && (
+              <label
+                htmlFor="bikePhotos"
+                className="block w-full text-center cursor-pointer bg-red-600 hover:bg-red-700 p-3 rounded-lg font-bold"
+              >
+                📷{" "}
+                {imageFiles.length === 0
+                  ? "Choose First Photo"
+                  : "➕ Add More Photos"}
+              </label>
+            )}
+
+            <input
+              id="bikePhotos"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handlePhotoSelect}
+              className="hidden"
+            />
+
+            {/* PHOTO COUNT */}
+            {imageFiles.length > 0 && (
+              <div className="mt-3 bg-gray-800 rounded-lg p-3">
+
+                <p className="text-green-400 font-semibold">
+                  ✅ {imageFiles.length} / 6 photos selected
+                </p>
+
+                {imageFiles.length < 6 && (
+                  <p className="text-gray-400 text-xs mt-1">
+                    You can add{" "}
+                    {6 - imageFiles.length} more
+                    photo
+                    {6 - imageFiles.length === 1
+                      ? ""
+                      : "s"}.
+                  </p>
+                )}
+
+              </div>
+            )}
+
+            {/* PHOTO PREVIEWS */}
+            {imageFiles.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+
+                {imageFiles.map(
+                  (file, index) => (
+
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="relative bg-black rounded-lg overflow-hidden border border-gray-700"
+                    >
+
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Bike Photo ${index + 1}`}
+                        className="w-full h-28 object-cover"
+                      />
+
+                      {/* PHOTO NUMBER */}
+                      <span className="absolute top-2 left-2 bg-black/80 px-2 py-1 rounded text-xs font-bold">
+                        Photo {index + 1}
+                      </span>
+
+                      {/* REMOVE */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          removePhoto(index)
+                        }
+                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 w-7 h-7 rounded-full font-bold"
+                      >
+                        ×
+                      </button>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+            )}
+
+          </div>
+
+          {/* DESCRIPTION */}
+          <textarea
+            placeholder="Description"
+            value={description}
+            onChange={(e) =>
+              setDescription(e.target.value)
+            }
+            rows={5}
+            className="w-full p-3 rounded bg-gray-800 border border-gray-700"
+          />
+
+          {/* SAVE */}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 p-3 rounded-lg font-bold"
+          >
+            {saving
+              ? `Uploading ${imageFiles.length} photos...`
+              : "Save Bike"}
+          </button>
+
+        </div>
+      </div>
+
+    </main>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-
-  header: {
-    height: 105,
-    paddingTop: 45,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: "#222",
-  },
-
-  backButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#111827",
-    borderWidth: 1,
-    borderColor: "#292929",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  backText: {
-    color: "#fff",
-    fontSize: 38,
-    fontWeight: "300",
-    lineHeight: 40,
-    marginTop: -4,
-  },
-
-  headerTitle: {
-    color: "#fff",
-    fontSize: 26,
-    fontWeight: "800",
-  },
-
-  headerSpace: {
-    width: 52,
-  },
-
-  listContent: {
-    padding: 18,
-    paddingBottom: 40,
-  },
-
-  notificationCard: {
-    backgroundColor: "#111827",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#292929",
-    padding: 16,
-    marginBottom: 14,
-    flexDirection: "row",
-  },
-
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#1b1b1b",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 13,
-  },
-
-  bell: {
-    fontSize: 24,
-  },
-
-  notificationContent: {
-    flex: 1,
-  },
-
-  notificationTitle: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "800",
-    marginBottom: 7,
-  },
-
-  notificationMessage: {
-    color: "#ccc",
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 10,
-  },
-
-  bikeInfo: {
-    color: "#fff",
-    fontSize: 13,
-    marginTop: 3,
-  },
-
-  date: {
-    color: "#777",
-    fontSize: 11,
-    marginTop: 10,
-  },
-
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  loadingText: {
-    color: "#888",
-    marginTop: 12,
-    fontSize: 13,
-  },
-
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 30,
-  },
-
-  emptyBell: {
-    fontSize: 70,
-    marginBottom: 25,
-  },
-
-  emptyTitle: {
-    color: "#fff",
-    fontSize: 25,
-    fontWeight: "800",
-    marginBottom: 10,
-  },
-
-  emptyText: {
-    color: "#777",
-    fontSize: 14,
-    textAlign: "center",
-  },
-});
