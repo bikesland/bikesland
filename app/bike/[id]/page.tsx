@@ -356,7 +356,7 @@ export default function BikeDetailsPage() {
             <div className="mt-8 space-y-3">
 
               <a
-                href={`https://wa.me/916301885817?text=${encodeURIComponent(
+                href={`https://wa.me/919553550553?text=${encodeURIComponent(
                   `Hi BikesLand, I'm interested in ${bike.bikeName}. Price: ₹${bike.price}`
                 )}`}
                 target="_blank"
@@ -367,7 +367,7 @@ export default function BikeDetailsPage() {
               </a>
 
               <a
-                href="tel:+916301885817"
+                href="tel:+919553550553"
                 className="flex items-center justify-center gap-2 w-full bg-white hover:bg-zinc-200 text-black py-4 rounded-2xl font-black transition"
               >
                 📞 Call BikesLand
@@ -589,14 +589,14 @@ export default function BikeDetailsPage() {
               <div className="flex flex-col sm:flex-row justify-center gap-3 mt-7">
 
                 <a
-                  href="tel:+916301885817"
+                  href="tel:+919553550553"
                   className="bg-white text-black hover:bg-zinc-100 px-7 py-3.5 rounded-xl font-black transition"
                 >
                   📞 Call Now
                 </a>
 
                 <a
-                  href={`https://wa.me/916301885817?text=${encodeURIComponent(
+                  href={`https://wa.me/919553550553?text=${encodeURIComponent(
                     `Hi BikesLand, I'm interested in ${bike.bikeName}`
                   )}`}
                   target="_blank"

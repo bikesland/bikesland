@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,10 +9,13 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import {
   collection,
   getDocs,
 } from "firebase/firestore";
+
 import { db } from "../../firebase";
 
 type NotificationItem = {
@@ -22,14 +26,17 @@ type NotificationItem = {
   createdAt?: any;
 };
 
+const CLEARED_NOTIFICATIONS_KEY =
+  "@bikesland_cleared_notifications";
+
 export default function NotificationsScreen() {
   const router = useRouter();
 
-  const [notifications, setNotifications] = useState<
-    NotificationItem[]
-  >([]);
+  const [notifications, setNotifications] =
+    useState<NotificationItem[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
 
   // =========================
   // LOAD NOTIFICATIONS
@@ -38,8 +45,11 @@ export default function NotificationsScreen() {
     try {
       setLoading(true);
 
-      console.log("🔔 Loading BikesLand notifications...");
+      console.log(
+        "🔔 Loading BikesLand notifications..."
+      );
 
+      // Get notifications from Firestore
       const snapshot = await getDocs(
         collection(db, "notifications")
       );
@@ -49,33 +59,62 @@ export default function NotificationsScreen() {
         snapshot.docs.length
       );
 
+      // =========================
+      // GET LOCALLY CLEARED IDS
+      // =========================
+      const clearedData =
+        await AsyncStorage.getItem(
+          CLEARED_NOTIFICATIONS_KEY
+        );
+
+      const clearedIds: string[] =
+        clearedData
+          ? JSON.parse(clearedData)
+          : [];
+
+      const clearedSet =
+        new Set(clearedIds);
+
+      // =========================
+      // CONVERT FIRESTORE DATA
+      // =========================
       const data: NotificationItem[] =
-        snapshot.docs.map((item) => {
-          const notification = item.data();
+        snapshot.docs
+          .map((item) => {
+            const notification =
+              item.data();
 
-          return {
-            id: item.id,
+            return {
+              id: item.id,
 
-            title: String(
-              notification.title ||
-                "BikesLand"
-            ),
+              title: String(
+                notification.title ||
+                  "BikesLand"
+              ),
 
-            message: String(
-              notification.message ||
-                notification.description ||
-                ""
-            ),
+              message: String(
+                notification.message ||
+                  notification.description ||
+                  ""
+              ),
 
-            type: String(
-              notification.type ||
-                "general"
-            ),
+              type: String(
+                notification.type ||
+                  "general"
+              ),
 
-            createdAt:
-              notification.createdAt,
-          };
-        });
+              createdAt:
+                notification.createdAt,
+            };
+          })
+
+          // =========================
+          // HIDE LOCALLY CLEARED
+          // =========================
+          .filter(
+            (item) =>
+              !clearedSet.has(item.id)
+          );
 
       // =========================
       // SORT NEWEST FIRST
@@ -105,6 +144,94 @@ export default function NotificationsScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // =========================
+  // CLEAR ALL
+  // =========================
+  const clearAllNotifications = () => {
+    if (notifications.length === 0) {
+      return;
+    }
+
+    Alert.alert(
+      "Clear All Notifications",
+      "Clear all notifications from this device?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+
+        {
+          text: "Clear All",
+          style: "destructive",
+
+          onPress: async () => {
+            try {
+              setClearing(true);
+
+              console.log(
+                "🗑️ Clearing notifications on this device..."
+              );
+
+              // Get already cleared IDs
+              const existingData =
+                await AsyncStorage.getItem(
+                  CLEARED_NOTIFICATIONS_KEY
+                );
+
+              const existingIds: string[] =
+                existingData
+                  ? JSON.parse(existingData)
+                  : [];
+
+              // Current notification IDs
+              const currentIds =
+                notifications.map(
+                  (item) => item.id
+                );
+
+              // Combine old + current IDs
+              const allClearedIds =
+                Array.from(
+                  new Set([
+                    ...existingIds,
+                    ...currentIds,
+                  ])
+                );
+
+              // Save locally
+              await AsyncStorage.setItem(
+                CLEARED_NOTIFICATIONS_KEY,
+                JSON.stringify(
+                  allClearedIds
+                )
+              );
+
+              // Empty current screen
+              setNotifications([]);
+
+              console.log(
+                "✅ Notifications cleared on this device"
+              );
+            } catch (error) {
+              console.log(
+                "❌ Clear notifications error:",
+                error
+              );
+
+              Alert.alert(
+                "Error",
+                "Could not clear notifications. Please try again."
+              );
+            } finally {
+              setClearing(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   // =========================
@@ -174,6 +301,8 @@ export default function NotificationsScreen() {
 
       <View style={styles.header}>
 
+        {/* BACK */}
+
         <TouchableOpacity
           style={styles.backButton}
           onPress={() =>
@@ -186,9 +315,38 @@ export default function NotificationsScreen() {
           </Text>
         </TouchableOpacity>
 
+        {/* TITLE */}
+
         <Text style={styles.headerTitle}>
           Notifications
         </Text>
+
+        {/* CLEAR ALL */}
+
+        {!loading &&
+          notifications.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={
+                clearAllNotifications
+              }
+              disabled={clearing}
+              activeOpacity={0.7}
+            >
+              {clearing ? (
+                <ActivityIndicator
+                  size="small"
+                  color="#e50914"
+                />
+              ) : (
+                <Text
+                  style={styles.clearText}
+                >
+                  Clear All
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
 
       </View>
 
@@ -198,7 +356,9 @@ export default function NotificationsScreen() {
 
       <ScrollView
         style={styles.content}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={
+          false
+        }
       >
 
         {/* LOADING */}
@@ -274,13 +434,11 @@ export default function NotificationsScreen() {
               <View
                 style={styles.iconCircle}
               >
-
                 <Text
                   style={styles.icon}
                 >
                   {getIcon(item.type)}
                 </Text>
-
               </View>
 
               {/* CONTENT */}
@@ -368,7 +526,20 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "800",
     textAlign: "center",
-    marginRight: 40,
+    marginLeft: 8,
+  },
+
+  clearButton: {
+    minWidth: 68,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  clearText: {
+    color: "#e50914",
+    fontSize: 11,
+    fontWeight: "800",
   },
 
   content: {

@@ -248,7 +248,7 @@ export default function HomeScreen() {
 
   const callNow = () => {
     Linking.openURL(
-      "tel:+916301885817"
+      "tel:+919553550553"
     );
   };
 
@@ -261,7 +261,7 @@ export default function HomeScreen() {
       `Hi BikesLand, I am interested in ${bikeName}`;
 
     Linking.openURL(
-      `https://wa.me/916301885817?text=${encodeURIComponent(
+      `https://wa.me/919553550553?text=${encodeURIComponent(
         message
       )}`
     );

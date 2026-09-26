@@ -369,13 +369,13 @@ export default function Home() {
                       View Details
                     </Link>
                     <a
-                      href="tel:+916301885817"
+                      href="tel:+919553550553"
                       className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
                     >
                       Call
                     </a>
                     <a
-                      href={`https://wa.me/916301885817?text=Hi%20I'm%20interested%20in%20${encodeURIComponent(
+                      href={`https://wa.me/919553550553?text=Hi%20I'm%20interested%20in%20${encodeURIComponent(
                         bike.bikeName ||
                           "this bike"
                       )}`}
@@ -535,20 +535,20 @@ export default function Home() {
           Contact Us
         </h2>
         <p className="mt-4">
-          📞 +91 6301885817
+          📞 +91 9553550553
         </p>
         <p>
           📍 Nellore, Andhra Pradesh
         </p>
         <div className="mt-6 flex justify-center gap-4">
           <a
-            href="tel:+916301885817"
+            href="tel:+919553550553"
             className="bg-blue-600 px-5 py-3 rounded-lg"
           >
             Call Now
           </a>
           <a
-            href="https://wa.me/916301885817"
+            href="https://wa.me/91955355055"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-green-600 px-5 py-3 rounded-lg"
@@ -569,10 +569,10 @@ export default function Home() {
             Trusted Second-Hand Bikes Marketplace
           </p>
           <p className="mt-4">
-            📞 +91 6301885817
+            📞 +91 9553550553
           </p>
           <p>
-            💬 WhatsApp: +91 6301885817
+            💬 WhatsApp: +91 9553550553
           </p>
           <p className="mt-4 text-gray-500">
             Office Coming Soon...

@@ -53,24 +53,15 @@ export default function ViewDetails() {
           return;
         }
 
-        console.log("Loading bike ID:", id);
-
-        // -----------------------------
-        // LOAD SELECTED BIKE
-        // -----------------------------
-
         const bikeRef = doc(db, "bikes", String(id));
         const bikeSnap = await getDoc(bikeRef);
 
         if (!bikeSnap.exists()) {
-          console.log("Bike not found:", id);
           setError("This bike is no longer available.");
           return;
         }
 
         const data = bikeSnap.data();
-
-        console.log("Selected bike:", data);
 
         let images: string[] = [];
 
@@ -133,9 +124,9 @@ export default function ViewDetails() {
 
         setBike(firebaseBike);
 
-        // -----------------------------
+        // =============================
         // LOAD SUGGESTED BIKES
-        // -----------------------------
+        // =============================
 
         const bikesSnapshot = await getDocs(
           collection(db, "bikes")
@@ -144,7 +135,6 @@ export default function ViewDetails() {
         const otherBikes: Bike[] = [];
 
         bikesSnapshot.forEach((bikeDoc) => {
-          // Current bike ni exclude chestham
           if (bikeDoc.id === bikeSnap.id) {
             return;
           }
@@ -220,7 +210,6 @@ export default function ViewDetails() {
           otherBikes.push(suggestedBike);
         });
 
-        // Maximum 6 suggested bikes
         setSuggestedBikes(otherBikes.slice(0, 6));
       } catch (err: any) {
         console.log("View details error:", err);
@@ -237,17 +226,17 @@ export default function ViewDetails() {
     loadBike();
   }, [id]);
 
-  // -----------------------------
+  // =============================
   // CALL
-  // -----------------------------
+  // =============================
 
   const callNow = () => {
-    Linking.openURL("tel:+916301885817");
+    Linking.openURL("tel:+919553550553");
   };
 
-  // -----------------------------
+  // =============================
   // WHATSAPP
-  // -----------------------------
+  // =============================
 
   const whatsapp = () => {
     if (!bike) return;
@@ -256,15 +245,15 @@ export default function ViewDetails() {
       `Hi BikesLand, I am interested in ${bike.name}`;
 
     Linking.openURL(
-      `https://wa.me/916301885817?text=${encodeURIComponent(
+      `https://wa.me/919553550553?text=${encodeURIComponent(
         message
       )}`
     );
   };
 
-  // -----------------------------
+  // =============================
   // LOADING
-  // -----------------------------
+  // =============================
 
   if (loading) {
     return (
@@ -281,9 +270,9 @@ export default function ViewDetails() {
     );
   }
 
-  // -----------------------------
+  // =============================
   // ERROR
-  // -----------------------------
+  // =============================
 
   if (error || !bike) {
     return (
@@ -309,508 +298,519 @@ export default function ViewDetails() {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
+
       {/* =========================
-          TOP BAR
+          FIXED BACK TO HOME
       ========================= */}
 
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backText}>
-            ‹
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.topTitle}>
-          BIKESLAND
+      <TouchableOpacity
+        style={styles.fixedBackHome}
+        activeOpacity={0.85}
+        onPress={() => router.replace("/")}
+      >
+        <Text style={styles.fixedBackHomeText}>
+          ← Back to Home
         </Text>
+      </TouchableOpacity>
 
-        <View style={styles.rightSpace} />
-      </View>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
 
-      {/* =========================
-          BIKE PHOTOS
-      ========================= */}
+        {/* =========================
+            TOP BAR
+        ========================= */}
 
-      <View style={styles.gallery}>
-        {bike.images &&
-        bike.images.length > 0 ? (
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-          >
-            {bike.images.map(
-              (image, index) => (
-                <View
-                  key={`${bike.id}-${index}`}
-                  style={styles.photoContainer}
-                >
-                  <Image
-                    source={{ uri: image }}
-                    style={styles.bikeImage}
-                    resizeMode="cover"
-                  />
+        <View style={styles.topBar}>
+          <Text style={styles.topTitle}>
+            <Text style={styles.topBikes}>
+              BIKES
+            </Text>
+            <Text style={styles.topLand}>
+              LAND
+            </Text>
+          </Text>
+        </View>
 
+        {/* =========================
+            BIKE PHOTOS
+        ========================= */}
+
+        <View style={styles.gallery}>
+          {bike.images &&
+          bike.images.length > 0 ? (
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+            >
+              {bike.images.map(
+                (image, index) => (
                   <View
-                    style={styles.photoCounter}
+                    key={`${bike.id}-${index}`}
+                    style={styles.photoContainer}
                   >
-                    <Text
-                      style={
-                        styles.photoCounterText
-                      }
+                    <Image
+                      source={{ uri: image }}
+                      style={styles.bikeImage}
+                      resizeMode="cover"
+                    />
+
+                    <View
+                      style={styles.photoCounter}
                     >
-                      {index + 1} /{" "}
-                      {bike.images?.length || 1}
-                    </Text>
+                      <Text
+                        style={
+                          styles.photoCounterText
+                        }
+                      >
+                        {index + 1} /{" "}
+                        {bike.images?.length || 1}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              )
-            )}
-          </ScrollView>
-        ) : (
-          <View style={styles.noImage}>
-            <Text style={styles.noImageText}>
-              No Bike Image
-            </Text>
-          </View>
-        )}
-      </View>
+                )
+              )}
+            </ScrollView>
+          ) : (
+            <View style={styles.noImage}>
+              <Text style={styles.noImageText}>
+                No Bike Image
+              </Text>
+            </View>
+          )}
+        </View>
 
-      {/* =========================
-          MAIN CONTENT
-      ========================= */}
+        {/* =========================
+            MAIN CONTENT
+        ========================= */}
 
-      <View style={styles.content}>
+        <View style={styles.content}>
 
-        {/* NAME */}
-
-        <Text style={styles.name}>
-          {bike.name}
-        </Text>
-
-        {/* PRICE */}
-
-        <Text style={styles.price}>
-          {bike.price}
-        </Text>
-
-        {/* LOCATION */}
-
-        <View style={styles.locationRow}>
-          <Text style={styles.location}>
-            📍 {bike.location}
+          <Text style={styles.name}>
+            {bike.name}
           </Text>
 
-          <View style={styles.listedBadge}>
-            <Text style={styles.listedText}>
-              ✓ BikesLand Listing
-            </Text>
-          </View>
-        </View>
+          <Text style={styles.price}>
+            {bike.price}
+          </Text>
 
-        {/* =========================
-            DETAILS
-        ========================= */}
-
-        <View style={styles.infoBox}>
-
-          <View style={styles.infoItem}>
-            <Text style={styles.icon}>
-              📅
+          <View style={styles.locationRow}>
+            <Text style={styles.location}>
+              📍 {bike.location}
             </Text>
 
-            <Text style={styles.label}>
-              YEAR
-            </Text>
-
-            <Text style={styles.value}>
-              {bike.year}
-            </Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoItem}>
-            <Text style={styles.icon}>
-              🛣️
-            </Text>
-
-            <Text style={styles.label}>
-              KM DRIVEN
-            </Text>
-
-            <Text style={styles.value}>
-              {bike.km}
-            </Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoItem}>
-            <Text style={styles.icon}>
-              📍
-            </Text>
-
-            <Text style={styles.label}>
-              LOCATION
-            </Text>
-
-            <Text style={styles.value}>
-              {bike.location}
-            </Text>
-          </View>
-
-        </View>
-
-        {/* =========================
-            ABOUT
-        ========================= */}
-
-        <Text style={styles.heading}>
-          About this bike
-        </Text>
-
-        <Text style={styles.description}>
-          {bike.description}
-        </Text>
-
-        {/* =========================
-            BIKESLAND PROMISE
-        ========================= */}
-
-        <View style={styles.promiseBox}>
-
-          <View style={styles.promiseHeader}>
-            <View style={styles.promiseIconBox}>
-              <Text style={styles.promiseIcon}>
-                🛡️
-              </Text>
-            </View>
-
-            <View style={styles.promiseHeaderText}>
-              <Text style={styles.promiseTitle}>
-                BikesLand Promise
-              </Text>
-
-              <Text style={styles.promiseSubtitle}>
-                Trust that goes beyond the ride.
+            <View style={styles.listedBadge}>
+              <Text style={styles.listedText}>
+                ✓ BikesLand Listing
               </Text>
             </View>
           </View>
 
-          <View style={styles.promiseDivider} />
+          {/* =========================
+              DETAILS
+          ========================= */}
 
-          <View style={styles.promiseItem}>
-            <Text style={styles.promiseCheck}>
-              ✓
-            </Text>
+          <View style={styles.infoBox}>
 
-            <View style={styles.promiseItemText}>
-              <Text style={styles.promiseItemTitle}>
-                Transparent Bike Details
+            <View style={styles.infoItem}>
+              <Text style={styles.icon}>
+                📅
               </Text>
 
-              <Text style={styles.promiseItemDescription}>
-                Clear information about the bike
-                is provided in every listing.
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.promiseItem}>
-            <Text style={styles.promiseCheck}>
-              ✓
-            </Text>
-
-            <View style={styles.promiseItemText}>
-              <Text style={styles.promiseItemTitle}>
-                Genuine Listing Photos
+              <Text style={styles.label}>
+                YEAR
               </Text>
 
-              <Text style={styles.promiseItemDescription}>
-                We focus on giving customers
-                useful photos of the listed bike.
+              <Text style={styles.value}>
+                {bike.year}
               </Text>
             </View>
-          </View>
 
-          <View style={styles.promiseItem}>
-            <Text style={styles.promiseCheck}>
-              ✓
-            </Text>
+            <View style={styles.divider} />
 
-            <View style={styles.promiseItemText}>
-              <Text style={styles.promiseItemTitle}>
-                Clear & Honest Pricing
+            <View style={styles.infoItem}>
+              <Text style={styles.icon}>
+                🛣️
               </Text>
 
-              <Text style={styles.promiseItemDescription}>
-                Listed price is shown clearly
-                without unnecessary confusion.
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.promiseItem}>
-            <Text style={styles.promiseCheck}>
-              ✓
-            </Text>
-
-            <View style={styles.promiseItemText}>
-              <Text style={styles.promiseItemTitle}>
-                Customer-First Service
+              <Text style={styles.label}>
+                KM DRIVEN
               </Text>
 
-              <Text style={styles.promiseItemDescription}>
-                Our focus is to make your bike
-                search simple and comfortable.
+              <Text style={styles.value}>
+                {bike.km}
               </Text>
             </View>
-          </View>
 
-          <View style={styles.promiseItem}>
-            <Text style={styles.promiseCheck}>
-              ✓
-            </Text>
+            <View style={styles.divider} />
 
-            <View style={styles.promiseItemText}>
-              <Text style={styles.promiseItemTitle}>
-                Easy Support
+            <View style={styles.infoItem}>
+              <Text style={styles.icon}>
+                📍
               </Text>
 
-              <Text style={styles.promiseItemDescription}>
-                Contact BikesLand easily through
-                Call or WhatsApp.
+              <Text style={styles.label}>
+                LOCATION
+              </Text>
+
+              <Text style={styles.value}>
+                {bike.location}
               </Text>
             </View>
+
           </View>
 
-          <View style={styles.promiseBottom}>
-            <Text style={styles.promiseBottomText}>
-              BikesLand — Find your bike with confidence.
-            </Text>
-          </View>
+          {/* =========================
+              ABOUT
+          ========================= */}
 
-        </View>
+          <Text style={styles.heading}>
+            About this bike
+          </Text>
 
-        {/* =========================
-            SUGGESTED BIKES
-        ========================= */}
+          <Text style={styles.description}>
+            {bike.description}
+          </Text>
 
-        {suggestedBikes.length > 0 && (
-          <View style={styles.suggestedSection}>
+          {/* =========================
+              BIKESLAND PROMISE
+          ========================= */}
 
-            <View style={styles.suggestedHeader}>
-              <View>
-                <Text style={styles.heading}>
-                  Suggested Bikes
-                </Text>
+          <View style={styles.promiseBox}>
 
-                <Text style={styles.suggestedSubtitle}>
-                  You may also like these bikes
+            <View style={styles.promiseHeader}>
+
+              <View style={styles.promiseIconBox}>
+                <Text style={styles.promiseIcon}>
+                  🛡️
                 </Text>
               </View>
 
-              <Text style={styles.suggestedCount}>
-                {suggestedBikes.length}
-              </Text>
+              <View style={styles.promiseHeaderText}>
+
+                <Text style={styles.promiseTitle}>
+                  BikesLand Promise
+                </Text>
+
+                <Text style={styles.promiseSubtitle}>
+                  Trust that goes beyond the ride.
+                </Text>
+
+              </View>
+
             </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={
-                styles.suggestedScroll
-              }
-            >
-              {suggestedBikes.map(
-                (suggestedBike) => {
+            <View style={styles.promiseDivider} />
 
-                  const suggestedImage =
-                    suggestedBike.images &&
-                    suggestedBike.images.length > 0
-                      ? suggestedBike.images[0]
-                      : suggestedBike.imageUrl;
+            {/* POINT 1 */}
 
-                  return (
-                    <TouchableOpacity
-                      key={suggestedBike.id}
-                      style={styles.suggestedCard}
-                      activeOpacity={0.85}
-                      onPress={() =>
-                        router.push(
-                          `/view-details/${suggestedBike.id}`
-                        )
-                      }
-                    >
+            <View style={styles.promiseItem}>
 
-                      <View style={styles.suggestedImageBox}>
+              <Text style={styles.promiseCheck}>
+                ✓
+              </Text>
 
-                        {suggestedImage ? (
-                          <Image
-                            source={{
-                              uri: suggestedImage,
-                            }}
-                            style={
-                              styles.suggestedImage
-                            }
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <View
-                            style={
-                              styles.suggestedNoImage
-                            }
-                          >
-                            <Text
-                              style={
-                                styles.suggestedNoImageText
-                              }
-                            >
-                              No Image
-                            </Text>
-                          </View>
-                        )}
+              <View style={styles.promiseItemText}>
 
-                      </View>
+                <Text style={styles.promiseItemTitle}>
+                  Transparent Bike Details
+                </Text>
 
-                      <View
-                        style={
-                          styles.suggestedCardContent
+                <Text style={styles.promiseItemDescription}>
+                  Clear information about the bike.
+                </Text>
+
+              </View>
+
+            </View>
+
+            {/* POINT 2 */}
+
+            <View style={styles.promiseItem}>
+
+              <Text style={styles.promiseCheck}>
+                ✓
+              </Text>
+
+              <View style={styles.promiseItemText}>
+
+                <Text style={styles.promiseItemTitle}>
+                  Genuine Listing Photos
+                </Text>
+
+                <Text style={styles.promiseItemDescription}>
+                  See useful photos of the listed bike.
+                </Text>
+
+              </View>
+
+            </View>
+
+            {/* POINT 3 */}
+
+            <View style={styles.promiseItem}>
+
+              <Text style={styles.promiseCheck}>
+                ✓
+              </Text>
+
+              <View style={styles.promiseItemText}>
+
+                <Text style={styles.promiseItemTitle}>
+                  Clear & Honest Pricing
+                </Text>
+
+                <Text style={styles.promiseItemDescription}>
+                  The listed price is shown clearly.
+                </Text>
+
+              </View>
+
+            </View>
+
+            {/* EVERY RUPEE MATTERS */}
+
+            <View style={styles.promiseBottom}>
+
+              <Text style={styles.promiseBottomTitle}>
+                Every Rupee Matters.
+              </Text>
+
+              <Text style={styles.promiseBottomText}>
+                Your money deserves value and transparency.
+              </Text>
+
+            </View>
+
+          </View>
+
+          {/* =========================
+              SUGGESTED BIKES
+          ========================= */}
+
+          {suggestedBikes.length > 0 && (
+            <View style={styles.suggestedSection}>
+
+              <View style={styles.suggestedHeader}>
+
+                <View>
+
+                  <Text style={styles.heading}>
+                    Suggested Bikes
+                  </Text>
+
+                  <Text style={styles.suggestedSubtitle}>
+                    You may also like these bikes
+                  </Text>
+
+                </View>
+
+                <Text style={styles.suggestedCount}>
+                  {suggestedBikes.length}
+                </Text>
+
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={
+                  styles.suggestedScroll
+                }
+              >
+
+                {suggestedBikes.map(
+                  (suggestedBike) => {
+
+                    const suggestedImage =
+                      suggestedBike.images &&
+                      suggestedBike.images.length > 0
+                        ? suggestedBike.images[0]
+                        : suggestedBike.imageUrl;
+
+                    return (
+                      <TouchableOpacity
+                        key={suggestedBike.id}
+                        style={styles.suggestedCard}
+                        activeOpacity={0.85}
+                        onPress={() =>
+                          router.push(
+                            `/view-details/${suggestedBike.id}`
+                          )
                         }
                       >
 
-                        <Text
+                        <View
                           style={
-                            styles.suggestedBikeName
+                            styles.suggestedImageBox
                           }
-                          numberOfLines={1}
                         >
-                          {suggestedBike.name}
-                        </Text>
 
-                        <Text
-                          style={
-                            styles.suggestedPrice
-                          }
-                          numberOfLines={1}
-                        >
-                          {suggestedBike.price}
-                        </Text>
+                          {suggestedImage ? (
+                            <Image
+                              source={{
+                                uri: suggestedImage,
+                              }}
+                              style={
+                                styles.suggestedImage
+                              }
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <View
+                              style={
+                                styles.suggestedNoImage
+                              }
+                            >
+                              <Text
+                                style={
+                                  styles.suggestedNoImageText
+                                }
+                              >
+                                No Image
+                              </Text>
+                            </View>
+                          )}
 
-                        <Text
-                          style={
-                            styles.suggestedDetails
-                          }
-                          numberOfLines={1}
-                        >
-                          {suggestedBike.year} •{" "}
-                          {suggestedBike.km} KM
-                        </Text>
-
-                        <Text
-                          style={
-                            styles.suggestedLocation
-                          }
-                          numberOfLines={1}
-                        >
-                          📍 {suggestedBike.location}
-                        </Text>
+                        </View>
 
                         <View
                           style={
-                            styles.viewBikeButton
+                            styles.suggestedCardContent
                           }
                         >
+
                           <Text
                             style={
-                              styles.viewBikeText
+                              styles.suggestedBikeName
+                            }
+                            numberOfLines={1}
+                          >
+                            {suggestedBike.name}
+                          </Text>
+
+                          <Text
+                            style={
+                              styles.suggestedPrice
+                            }
+                            numberOfLines={1}
+                          >
+                            {suggestedBike.price}
+                          </Text>
+
+                          <Text
+                            style={
+                              styles.suggestedDetails
+                            }
+                            numberOfLines={1}
+                          >
+                            {suggestedBike.year} •{" "}
+                            {suggestedBike.km} KM
+                          </Text>
+
+                          <Text
+                            style={
+                              styles.suggestedLocation
+                            }
+                            numberOfLines={1}
+                          >
+                            📍 {suggestedBike.location}
+                          </Text>
+
+                          <View
+                            style={
+                              styles.viewBikeButton
                             }
                           >
-                            View Details →
-                          </Text>
+
+                            <Text
+                              style={
+                                styles.viewBikeText
+                              }
+                            >
+                              View Details →
+                            </Text>
+
+                          </View>
+
                         </View>
 
-                      </View>
+                      </TouchableOpacity>
+                    );
+                  }
+                )}
 
-                    </TouchableOpacity>
-                  );
-                }
-              )}
-            </ScrollView>
+              </ScrollView>
+
+            </View>
+          )}
+
+          {/* =========================
+              CONTACT
+          ========================= */}
+
+          <Text style={styles.contactHeading}>
+            Interested in this bike?
+          </Text>
+
+          <TouchableOpacity
+            style={styles.callButton}
+            activeOpacity={0.8}
+            onPress={callNow}
+          >
+            <Text style={styles.buttonText}>
+              📞 Call Now
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.whatsappButton}
+            activeOpacity={0.8}
+            onPress={whatsapp}
+          >
+            <Text style={styles.buttonText}>
+              💬 WhatsApp
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.interestedButton}
+            activeOpacity={0.8}
+            onPress={whatsapp}
+          >
+            <Text style={styles.interestedText}>
+              I'm Interested in This Bike
+            </Text>
+          </TouchableOpacity>
+
+          {/* =========================
+              FOOTER
+          ========================= */}
+
+          <View style={styles.footer}>
+
+            <Text style={styles.footerLogo}>
+              <Text style={styles.footerBikes}>
+                BIKES
+              </Text>
+              <Text style={styles.footerLand}>
+                LAND
+              </Text>
+            </Text>
+
+            <Text style={styles.footerText}>
+              BUY • SELL • TRUST
+            </Text>
 
           </View>
-        )}
-
-        {/* =========================
-            CONTACT
-        ========================= */}
-
-        <Text style={styles.contactHeading}>
-          Interested in this bike?
-        </Text>
-
-        {/* CALL */}
-
-        <TouchableOpacity
-          style={styles.callButton}
-          activeOpacity={0.8}
-          onPress={callNow}
-        >
-          <Text style={styles.buttonText}>
-            📞 Call Now
-          </Text>
-        </TouchableOpacity>
-
-        {/* WHATSAPP */}
-
-        <TouchableOpacity
-          style={styles.whatsappButton}
-          activeOpacity={0.8}
-          onPress={whatsapp}
-        >
-          <Text style={styles.buttonText}>
-            💬 WhatsApp
-          </Text>
-        </TouchableOpacity>
-
-        {/* INTERESTED */}
-
-        <TouchableOpacity
-          style={styles.interestedButton}
-          activeOpacity={0.8}
-          onPress={whatsapp}
-        >
-          <Text style={styles.interestedText}>
-            I'm Interested in This Bike
-          </Text>
-        </TouchableOpacity>
-
-        {/* =========================
-            FOOTER
-        ========================= */}
-
-        <View style={styles.footer}>
-
-          <Text style={styles.footerLogo}>
-            BIKESLAND
-          </Text>
-
-          <Text style={styles.footerText}>
-            BUY • SELL • TRUST
-          </Text>
 
         </View>
 
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -820,6 +820,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
+
+  scrollView: {
+    flex: 1,
+  },
+
+  // =========================
+  // FIXED BACK BUTTON
+  // =========================
+
+  fixedBackHome: {
+    position: "absolute",
+    top: 42,
+    left: 16,
+    zIndex: 999,
+    elevation: 999,
+    backgroundColor: "#111111",
+    borderWidth: 1,
+    borderColor: "#333333",
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 17,
+  },
+
+  fixedBackHomeText: {
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.2,
+  },
+
+  // =========================
+  // LOADING
+  // =========================
 
   loadingScreen: {
     flex: 1,
@@ -861,51 +894,36 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  /* =========================
-     TOP BAR
-  ========================= */
+  // =========================
+  // TOP BAR
+  // =========================
 
   topBar: {
     height: 65,
     backgroundColor: "#000000",
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 18,
+    justifyContent: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#222222",
   },
 
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#151515",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  backText: {
-    color: "#ffffff",
-    fontSize: 32,
-    lineHeight: 35,
-    marginTop: -4,
-  },
-
   topTitle: {
-    color: "#e50914",
     fontSize: 17,
     fontWeight: "900",
     letterSpacing: 2,
   },
 
-  rightSpace: {
-    width: 40,
+  topBikes: {
+    color: "#ffffff",
   },
 
-  /* =========================
-     GALLERY
-  ========================= */
+  topLand: {
+    color: "#e50914",
+  },
+
+  // =========================
+  // GALLERY
+  // =========================
 
   gallery: {
     width: "100%",
@@ -952,9 +970,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  /* =========================
-     CONTENT
-  ========================= */
+  // =========================
+  // CONTENT
+  // =========================
 
   content: {
     padding: 20,
@@ -1002,9 +1020,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  /* =========================
-     DETAILS
-  ========================= */
+  // =========================
+  // DETAILS
+  // =========================
 
   infoBox: {
     backgroundColor: "#111827",
@@ -1047,9 +1065,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#333333",
   },
 
-  /* =========================
-     ABOUT
-  ========================= */
+  // =========================
+  // ABOUT
+  // =========================
 
   heading: {
     color: "#ffffff",
@@ -1065,9 +1083,9 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
 
-  /* =========================
-     BIKESLAND PROMISE
-  ========================= */
+  // =========================
+  // BIKESLAND PROMISE
+  // =========================
 
   promiseBox: {
     backgroundColor: "#0d1117",
@@ -1124,7 +1142,7 @@ const styles = StyleSheet.create({
   promiseItem: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 16,
+    marginBottom: 15,
   },
 
   promiseCheck: {
@@ -1162,19 +1180,26 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    marginTop: 2,
+    marginTop: 3,
+    alignItems: "center",
+  },
+
+  promiseBottomTitle: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "900",
+    marginBottom: 3,
   },
 
   promiseBottomText: {
-    color: "#dddddd",
-    fontSize: 11,
-    fontWeight: "700",
+    color: "#777777",
+    fontSize: 10,
     textAlign: "center",
   },
 
-  /* =========================
-     SUGGESTED BIKES
-  ========================= */
+  // =========================
+  // SUGGESTED BIKES
+  // =========================
 
   suggestedSection: {
     marginBottom: 28,
@@ -1194,7 +1219,7 @@ const styles = StyleSheet.create({
   },
 
   suggestedCount: {
-    color: "#e50914",
+    color: "#f2f4f7",
     fontSize: 14,
     fontWeight: "900",
     backgroundColor: "#171717",
@@ -1282,9 +1307,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 
-  /* =========================
-     CONTACT
-  ========================= */
+  // =========================
+  // CONTACT
+  // =========================
 
   contactHeading: {
     color: "#ffffff",
@@ -1294,7 +1319,7 @@ const styles = StyleSheet.create({
   },
 
   callButton: {
-    backgroundColor: "#e50914",
+    backgroundColor: "#1056ec",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
@@ -1330,9 +1355,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 
-  /* =========================
-     FOOTER
-  ========================= */
+  // =========================
+  // FOOTER
+  // =========================
 
   footer: {
     alignItems: "center",
@@ -1340,10 +1365,17 @@ const styles = StyleSheet.create({
   },
 
   footerLogo: {
-    color: "#e50914",
     fontSize: 21,
     fontWeight: "900",
     letterSpacing: 2,
+  },
+
+  footerBikes: {
+    color: "#ffffff",
+  },
+
+  footerLand: {
+    color: "#e50914",
   },
 
   footerText: {
