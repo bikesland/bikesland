@@ -289,10 +289,16 @@ export default function Home() {
           Find Your Perfect Bike
         </h2>
 
-        <p className="mt-3 text-gray-400 text-base">
-          Buy & Sell Trusted Second-Hand Bikes with
-          BikesLand
-        </p>
+        <p
+  className="mt-3 text-gray-400 whitespace-nowrap"
+  style={{
+    fontSize: "12px",
+    lineHeight: "5px",
+    fontWeight: 400,
+  }}
+>
+  Buy & Sell Trusted Second-Hand Bikes with BikesLand
+</p>
 
         <div className="mt-5 flex flex-col sm:flex-row justify-center gap-4">
 
