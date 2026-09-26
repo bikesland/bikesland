@@ -429,13 +429,18 @@ export default function HomeScreen() {
 
       <View style={styles.header}>
 
-        <Image
-          source={require(
-            "../../assets/images/logo.png"
-          )}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+       <Image
+  source={require(
+    "../../assets/images/logo.png"
+  )}
+  style={[
+    styles.logo,
+    {
+      transform: [{ translateY: 7 }],
+    },
+  ]}
+  resizeMode="contain"
+/>
 
         {/* NOTIFICATION BELL */}
 
