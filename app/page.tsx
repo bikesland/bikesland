@@ -222,8 +222,7 @@ export default function Home() {
           NAVBAR
       ========================= */}
 
-      <nav className="sticky top-0 z-50 bg-black border-b border-gray-800">
-
+     <nav className="sticky top-0 z-50 bg-black border-b border-gray-800 pt-2">
         <div className="max-w-7xl mx-auto flex justify-between items-center px-5 py-0">
 
           <Link href="/">

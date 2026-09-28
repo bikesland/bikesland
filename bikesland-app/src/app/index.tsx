@@ -436,7 +436,7 @@ export default function HomeScreen() {
   style={[
     styles.logo,
     {
-      transform: [{ translateY: 7 }],
+      transform: [{ translateY: 2 }],
     },
   ]}
   resizeMode="contain"
