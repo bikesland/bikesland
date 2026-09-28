@@ -227,12 +227,13 @@ export default function Home() {
 
           <Link href="/">
             <Image
-              src="/logo.png"
-              alt="BikesLand Logo"
-              width={300}
-              height={80}
-              className="w-52 h-14 sm:w-80 sm:h-20 object-contain"
-            />
+  src="/logo.png"
+  alt="BikesLand Logo"
+  width={300}
+  height={80}
+  className="w-52 h-14 sm:w-80 sm:h-20 object-contain"
+  unoptimized
+/>
           </Link>
 
           <div className="hidden md:flex gap-5">
